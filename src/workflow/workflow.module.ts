@@ -7,9 +7,7 @@ import { WorkflowController } from './workflow.controller';
 import { WorkflowExecutionService } from './workflow-execution.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([WorkflowDefinition, WorkflowInstance]),
-  ],
+  imports: [TypeOrmModule.forFeature([WorkflowDefinition, WorkflowInstance])],
   providers: [WorkflowService, WorkflowExecutionService],
   controllers: [WorkflowController],
   exports: [WorkflowService, WorkflowExecutionService],

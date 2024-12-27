@@ -12,7 +12,9 @@ export class WorkflowService {
     private workflowDefinitionRepo: Repository<WorkflowDefinition>,
   ) {}
 
-  async create(createDto: CreateWorkflowDefinitionDto): Promise<WorkflowDefinition> {
+  async create(
+    createDto: CreateWorkflowDefinitionDto,
+  ): Promise<WorkflowDefinition> {
     const workflow = this.workflowDefinitionRepo.create(createDto);
     return await this.workflowDefinitionRepo.save(workflow);
   }
@@ -22,14 +24,21 @@ export class WorkflowService {
   }
 
   async findOne(id: string): Promise<WorkflowDefinition> {
-    const workflow = await this.workflowDefinitionRepo.findOne({ where: { id } });
+    const workflow = await this.workflowDefinitionRepo.findOne({
+      where: { id },
+    });
     if (!workflow) {
-      throw new NotFoundException(`Workflow definition with ID "${id}" not found`);
+      throw new NotFoundException(
+        `Workflow definition with ID "${id}" not found`,
+      );
     }
     return workflow;
   }
 
-  async update(id: string, updateDto: UpdateWorkflowDefinitionDto): Promise<WorkflowDefinition> {
+  async update(
+    id: string,
+    updateDto: UpdateWorkflowDefinitionDto,
+  ): Promise<WorkflowDefinition> {
     const workflow = await this.findOne(id);
     Object.assign(workflow, updateDto);
     return await this.workflowDefinitionRepo.save(workflow);
@@ -40,7 +49,9 @@ export class WorkflowService {
     await this.workflowDefinitionRepo.remove(workflow);
   }
 
-  async validateWorkflowDefinition(workflow: WorkflowDefinition): Promise<boolean> {
+  async validateWorkflowDefinition(
+    workflow: WorkflowDefinition,
+  ): Promise<boolean> {
     // Validate steps have unique IDs
     const stepIds = new Set();
     for (const step of workflow.steps) {
@@ -71,14 +82,16 @@ export class WorkflowService {
 
     const dfs = (stepId: string) => {
       if (recursionStack.has(stepId)) {
-        throw new Error(`Circular dependency detected involving step: ${stepId}`);
+        throw new Error(
+          `Circular dependency detected involving step: ${stepId}`,
+        );
       }
       if (visited.has(stepId)) return;
 
       visited.add(stepId);
       recursionStack.add(stepId);
 
-      const step = steps.find(s => s.id === stepId);
+      const step = steps.find((s) => s.id === stepId);
       for (const depId of step.dependencies) {
         dfs(depId);
       }
