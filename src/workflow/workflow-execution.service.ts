@@ -125,7 +125,7 @@ export class WorkflowExecutionService {
         await this.workflowInstanceRepo.save(instance);
 
         // Execute step based on type
-        let result;
+        let result: TaskResult;
         switch (step.type) {
           case StepType.TASK:
             result = await this.executeTask(instance, step);
