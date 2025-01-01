@@ -146,7 +146,7 @@ export class WorkflowExecutionService {
         );
         stepState.status = StepStatus.COMPLETED;
         stepState.endTime = new Date();
-        stepState.output = result;
+        stepState.output = result.output;
 
         // Move step from current to completed
         instance.state.completedSteps.push(stepState);
@@ -154,10 +154,13 @@ export class WorkflowExecutionService {
           (s) => s.stepId !== step.id,
         );
 
-        // Update instance state
+        // Update instance state variables with step output
         instance.state.variables = {
           ...instance.state.variables,
-          [step.id]: result,
+          [step.id]: {
+            output: result.output,
+            status: StepStatus.COMPLETED,
+          },
         };
 
         await this.workflowInstanceRepo.save(instance);
@@ -184,25 +187,9 @@ export class WorkflowExecutionService {
         stepState.status = StepStatus.FAILED;
         stepState.error = error.message;
 
-        if (
-          step.retryConfig &&
-          stepState.attempts < step.retryConfig.maxAttempts
-        ) {
-          // Implement retry logic
-          stepState.attempts += 1;
-          const delay =
-            step.retryConfig.initialDelay *
-            Math.pow(
-              step.retryConfig.backoffMultiplier,
-              stepState.attempts - 1,
-            );
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          await this.executeSteps(instance, [step.id]);
-        } else {
-          instance.status = WorkflowStatus.FAILED;
-          await this.workflowInstanceRepo.save(instance);
-          throw error;
-        }
+        instance.status = WorkflowStatus.FAILED;
+        await this.workflowInstanceRepo.save(instance);
+        throw error;
       }
     }
   }
@@ -214,7 +201,7 @@ export class WorkflowExecutionService {
     try {
       this.logger.debug(`Executing task: ${step.name}`);
 
-      switch (step.type) {
+      switch (step.config.type) {
         case TaskType.HTTP:
           return await this.executeHttpTask(step.config);
 
@@ -234,7 +221,7 @@ export class WorkflowExecutionService {
           return await this.executeDelay(step.config);
 
         default:
-          throw new Error(`Unsupported task type: ${step.type}`);
+          throw new Error(`Unsupported task type: ${step.config.type}`);
       }
     } catch (error) {
       this.logger.error(`Task execution failed: ${error.message}`);
@@ -271,15 +258,20 @@ export class WorkflowExecutionService {
   ): Promise<TaskResult> {
     const { script } = config;
     try {
-      // Safe eval with context
-      const context = { ...variables };
+      // Create a safe context with variables
+      const context = {
+        ...variables,
+        // Add helper functions if needed
+        JSON: JSON,
+      };
+
       const result = new Function(
         'context',
         `
         with (context) {
           ${script}
         }
-      `,
+        `,
       )(context);
 
       return {
@@ -414,17 +406,12 @@ export class WorkflowExecutionService {
   private generateWorkflowOutput(
     instance: WorkflowInstance,
   ): Record<string, any> {
-    const output: Record<string, any> = {};
-    const { outputSchema } = instance.workflowDefinition;
-
-    // Map the final state variables to the output schema
-    for (const [key, mapping] of Object.entries(outputSchema)) {
-      if (typeof mapping === 'string' && mapping in instance.state.variables) {
-        output[key] = instance.state.variables[mapping];
-      }
+    // Find the last step that generates output
+    const lastStep = instance.state.completedSteps[instance.state.completedSteps.length - 1];
+    if (lastStep && lastStep.output) {
+      return lastStep.output;
     }
-
-    return output;
+    return {};
   }
 
   async pauseWorkflow(instanceId: string): Promise<WorkflowInstance> {

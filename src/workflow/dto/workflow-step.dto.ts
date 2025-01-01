@@ -1,4 +1,11 @@
-import { IsString, IsEnum, IsArray, IsObject, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsNumber,
+} from 'class-validator';
 import { StepType } from '../entities/workflow-definition.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -25,8 +32,8 @@ export class WorkflowStepDto {
     example: {
       handler: 'sendEmail',
       inputMapping: { email: '$.input.email' },
-      outputMapping: { result: '$.output.sent' }
-    }
+      outputMapping: { result: '$.output.sent' },
+    },
   })
   @IsObject()
   config: {
@@ -40,8 +47,8 @@ export class WorkflowStepDto {
     example: {
       maxAttempts: 3,
       backoffMultiplier: 1.5,
-      initialDelay: 1000
-    }
+      initialDelay: 1000,
+    },
   })
   @IsOptional()
   @IsObject()
@@ -52,7 +59,7 @@ export class WorkflowStepDto {
   };
 
   @ApiPropertyOptional({
-    description: 'Timeout in milliseconds for the step execution'
+    description: 'Timeout in milliseconds for the step execution',
   })
   @IsOptional()
   @IsNumber()
@@ -62,8 +69,8 @@ export class WorkflowStepDto {
     description: 'Condition for step execution',
     example: {
       expression: '$.input.amount > 1000',
-      type: 'javascript'
-    }
+      type: 'javascript',
+    },
   })
   @IsOptional()
   @IsObject()

@@ -1,4 +1,11 @@
-import { IsString, IsArray, IsObject, IsOptional, IsBoolean, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsBoolean,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { WorkflowStepDto } from './workflow-step.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -12,42 +19,42 @@ export class CreateWorkflowDefinitionDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Array of workflow steps that define the workflow',
-    type: [WorkflowStepDto]
+    type: [WorkflowStepDto],
   })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => WorkflowStepDto)
   steps: WorkflowStepDto[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'JSON Schema for workflow input validation',
     example: {
       type: 'object',
       properties: {
-        email: { type: 'string', format: 'email' }
-      }
-    }
+        email: { type: 'string', format: 'email' },
+      },
+    },
   })
   @IsObject()
   inputSchema: Record<string, any>;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'JSON Schema for workflow output validation',
     example: {
       type: 'object',
       properties: {
-        success: { type: 'boolean' }
-      }
-    }
+        success: { type: 'boolean' },
+      },
+    },
   })
   @IsObject()
   outputSchema: Record<string, any>;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Whether the workflow definition is active',
-    default: true
+    default: true,
   })
   @IsOptional()
   @IsBoolean()

@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -30,7 +31,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow definition' })
@@ -157,6 +158,117 @@ export class WorkflowController {
           },
         },
       },
+      loanProcessing: {
+        summary: 'Loan Processing Workflow',
+        value: {
+          name: 'Loan Processing Workflow',
+          description:
+            'Processes loan applications with credit check and risk assessment',
+          steps: [
+            {
+              id: 'validate-application',
+              name: 'Validate Loan Application',
+              type: 'TASK',
+              dependencies: [],
+              config: {
+                handler: 'loanValidator',
+                inputMapping: {
+                  applicantName: '$.input.applicantName',
+                  income: '$.input.income',
+                  loanAmount: '$.input.loanAmount',
+                  loanTerm: '$.input.loanTerm',
+                },
+                outputMapping: {
+                  isValid: '$.output.isValid',
+                  validationErrors: '$.output.errors',
+                },
+              },
+            },
+            {
+              id: 'check-credit',
+              name: 'Credit Score Check',
+              type: 'TASK',
+              dependencies: ['validate-application'],
+              config: {
+                handler: 'creditChecker',
+                inputMapping: {
+                  applicantName: '$.input.applicantName',
+                  ssn: '$.input.ssn',
+                },
+                outputMapping: {
+                  creditScore: '$.output.score',
+                  creditReport: '$.output.report',
+                },
+              },
+            },
+            {
+              id: 'assess-risk',
+              name: 'Risk Assessment',
+              type: 'TASK',
+              dependencies: ['check-credit'],
+              config: {
+                handler: 'riskAssessor',
+                inputMapping: {
+                  creditScore: '$.steps.check-credit.output.creditScore',
+                  income: '$.input.income',
+                  loanAmount: '$.input.loanAmount',
+                  loanTerm: '$.input.loanTerm',
+                },
+                outputMapping: {
+                  riskLevel: '$.output.riskLevel',
+                  recommendedRate: '$.output.recommendedRate',
+                },
+              },
+            },
+            {
+              id: 'make-decision',
+              name: 'Loan Decision',
+              type: 'TASK',
+              dependencies: ['assess-risk'],
+              config: {
+                handler: 'loanDecision',
+                inputMapping: {
+                  riskLevel: '$.steps.assess-risk.output.riskLevel',
+                  recommendedRate: '$.steps.assess-risk.output.recommendedRate',
+                  creditScore: '$.steps.check-credit.output.creditScore',
+                },
+                outputMapping: {
+                  approved: '$.output.approved',
+                  loanId: '$.output.loanId',
+                  interestRate: '$.output.interestRate',
+                  reason: '$.output.reason',
+                },
+              },
+            },
+          ],
+          inputSchema: {
+            type: 'object',
+            properties: {
+              applicantName: { type: 'string' },
+              ssn: { type: 'string' },
+              income: { type: 'number' },
+              loanAmount: { type: 'number' },
+              loanTerm: { type: 'number' },
+            },
+            required: [
+              'applicantName',
+              'ssn',
+              'income',
+              'loanAmount',
+              'loanTerm',
+            ],
+          },
+          outputSchema: {
+            type: 'object',
+            properties: {
+              approved: { type: 'boolean' },
+              loanId: { type: 'string' },
+              interestRate: { type: 'number' },
+              reason: { type: 'string' },
+            },
+          },
+        },
+      },
     },
   })
   create(@Body() createWorkflowDto: CreateWorkflowDefinitionDto) {
@@ -257,6 +369,35 @@ export class WorkflowController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.workflowService.remove(id);
+  }
+
+  @Post(':id/execute')
+  @ApiOperation({ summary: 'Execute a workflow' })
+  @ApiResponse({
+    status: 201,
+    description: 'The workflow has been started successfully.',
+    type: WorkflowInstance,
+  })
+  async executeWorkflow(
+    @Param('id') id: string,
+    @Body() startWorkflowDto: StartWorkflowDto,
+  ): Promise<WorkflowInstance> {
+    return this.workflowExecutionService.startWorkflow(id, startWorkflowDto.input);
+  }
+
+  @Get('instances/:id')
+  @ApiOperation({ summary: 'Get workflow instance status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the workflow instance details',
+    type: WorkflowInstance,
+  })
+  async getWorkflowInstance(@Param('id') id: string): Promise<WorkflowInstance> {
+    const instance = await this.workflowService.findInstanceById(id);
+    if (!instance) {
+      throw new NotFoundException(`Workflow instance ${id} not found`);
+    }
+    return instance;
   }
 
   @Post('execute')

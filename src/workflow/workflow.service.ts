@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WorkflowDefinition } from './entities/workflow-definition.entity';
+import { WorkflowInstance } from './entities/workflow-instance.entity';
 import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dto';
 import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
 
@@ -10,6 +11,8 @@ export class WorkflowService {
   constructor(
     @InjectRepository(WorkflowDefinition)
     private workflowDefinitionRepo: Repository<WorkflowDefinition>,
+    @InjectRepository(WorkflowInstance)
+    private workflowInstanceRepo: Repository<WorkflowInstance>,
   ) {}
 
   async create(
@@ -24,15 +27,7 @@ export class WorkflowService {
   }
 
   async findOne(id: string): Promise<WorkflowDefinition> {
-    const workflow = await this.workflowDefinitionRepo.findOne({
-      where: { id },
-    });
-    if (!workflow) {
-      throw new NotFoundException(
-        `Workflow definition with ID "${id}" not found`,
-      );
-    }
-    return workflow;
+    return this.workflowDefinitionRepo.findOneBy({ id });
   }
 
   async update(
@@ -47,6 +42,13 @@ export class WorkflowService {
   async remove(id: string): Promise<void> {
     const workflow = await this.findOne(id);
     await this.workflowDefinitionRepo.remove(workflow);
+  }
+
+  async findInstanceById(id: string): Promise<WorkflowInstance> {
+    return this.workflowInstanceRepo.findOne({
+      where: { id },
+      relations: ['workflowDefinition'],
+    });
   }
 
   async validateWorkflowDefinition(
