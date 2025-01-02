@@ -7,7 +7,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowDefinition } from './workflow-definition.entity';
+import { WorkflowDefinition, StepType, StepConfig } from './workflow-definition.entity';
 
 export enum WorkflowStatus {
   PENDING = 'PENDING',
@@ -73,6 +73,11 @@ export interface StepState {
   attempts: number;
   error?: string;
   output?: any;
+  // Step definition fields
+  name: string;
+  type: StepType;
+  config: StepConfig;
+  dependencies: string[];
 }
 
 export enum StepStatus {

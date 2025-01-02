@@ -1,13 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { StepType } from './entities/workflow-definition.entity';
 import {
-  StepStatus,
   WorkflowInstance,
   WorkflowStatus,
+  StepStatus,
+  StepState,
 } from './entities/workflow-instance.entity';
 import { WorkflowService } from './workflow.service';
+import { StepType, WorkflowStep } from './entities/workflow-definition.entity';
 
 enum TaskType {
   HTTP = 'http',
@@ -30,7 +31,7 @@ export class WorkflowExecutionService {
     @InjectRepository(WorkflowInstance)
     private workflowInstanceRepo: Repository<WorkflowInstance>,
     private workflowService: WorkflowService,
-  ) {}
+  ) { }
 
   async startWorkflow(
     workflowDefinitionId: string,
@@ -115,12 +116,7 @@ export class WorkflowExecutionService {
     for (const step of steps) {
       try {
         // Add step to current steps
-        instance.state.currentSteps.push({
-          stepId: step.id,
-          status: StepStatus.RUNNING,
-          startTime: new Date(),
-          attempts: 0,
-        });
+        instance.state.currentSteps.push(this.createStepState(step));
 
         await this.workflowInstanceRepo.save(instance);
 
@@ -192,6 +188,19 @@ export class WorkflowExecutionService {
         throw error;
       }
     }
+  }
+
+  private createStepState(step: WorkflowStep): StepState {
+    return {
+      stepId: step.id,
+      status: StepStatus.PENDING,
+      startTime: new Date(),
+      attempts: 0,
+      name: step.name,
+      type: step.type,
+      config: step.config,
+      dependencies: step.dependencies,
+    };
   }
 
   private async executeTask(

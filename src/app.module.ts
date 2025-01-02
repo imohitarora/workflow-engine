@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { WorkflowModule } from './workflow/workflow.module';
+import { ViewsController } from './views/views.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkflowDefinition } from './workflow/entities/workflow-definition.entity';
 import { WorkflowInstance } from './workflow/entities/workflow-instance.entity';
 
@@ -10,17 +11,17 @@ import { WorkflowInstance } from './workflow/entities/workflow-instance.entity';
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT, 10) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-      database: process.env.DB_NAME || 'workflow_engine',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: 'postgres',
+      database: 'workflow_engine',
       entities: [WorkflowDefinition, WorkflowInstance],
-      synchronize: process.env.NODE_ENV !== 'production', // Don't use synchronize in production
+      synchronize: true,
     }),
     WorkflowModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ViewsController],
   providers: [AppService],
 })
 export class AppModule {}

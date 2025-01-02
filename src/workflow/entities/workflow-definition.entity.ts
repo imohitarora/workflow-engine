@@ -48,6 +48,7 @@ export interface WorkflowStep {
 }
 
 export interface StepConfig {
+  type?: 'human' | 'script' | 'http';  // Type of task
   handler: string;
   inputMapping: Record<string, string>;
   outputMapping: Record<string, string>;
