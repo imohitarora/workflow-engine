@@ -222,7 +222,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="13" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:13</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="20" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:20</a></div>
                         </td>
                     </tr>
 
@@ -259,7 +259,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="34" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:34</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="41" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:41</a></div>
                         </td>
                     </tr>
 
@@ -298,7 +298,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="54" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:54</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="61" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:61</a></div>
                         </td>
                     </tr>
 
@@ -335,7 +335,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="9" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:9</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="16" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:16</a></div>
                         </td>
                     </tr>
 
@@ -372,7 +372,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="46" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:46</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="53" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:53</a></div>
                         </td>
                     </tr>
 
@@ -411,7 +411,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="22" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:22</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="29" class="link-to-prism">src/workflow/dto/create-workflow-definition.dto.ts:29</a></div>
                         </td>
                     </tr>
 
@@ -430,7 +430,14 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { IsString, IsArray, IsObject, IsOptional, IsBoolean, ValidateNested } from &#x27;class-validator&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import {
+  IsString,
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsBoolean,
+  ValidateNested,
+} from &#x27;class-validator&#x27;;
 import { Type } from &#x27;class-transformer&#x27;;
 import { WorkflowStepDto } from &#x27;./workflow-step.dto&#x27;;
 import { ApiProperty, ApiPropertyOptional } from &#x27;@nestjs/swagger&#x27;;
@@ -444,42 +451,42 @@ export class CreateWorkflowDefinitionDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: &#x27;Array of workflow steps that define the workflow&#x27;,
-    type: [WorkflowStepDto]
+    type: [WorkflowStepDto],
   })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() &#x3D;&gt; WorkflowStepDto)
   steps: WorkflowStepDto[];
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: &#x27;JSON Schema for workflow input validation&#x27;,
     example: {
       type: &#x27;object&#x27;,
       properties: {
-        email: { type: &#x27;string&#x27;, format: &#x27;email&#x27; }
-      }
-    }
+        email: { type: &#x27;string&#x27;, format: &#x27;email&#x27; },
+      },
+    },
   })
   @IsObject()
   inputSchema: Record&lt;string, any&gt;;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: &#x27;JSON Schema for workflow output validation&#x27;,
     example: {
       type: &#x27;object&#x27;,
       properties: {
-        success: { type: &#x27;boolean&#x27; }
-      }
-    }
+        success: { type: &#x27;boolean&#x27; },
+      },
+    },
   })
   @IsObject()
   outputSchema: Record&lt;string, any&gt;;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: &#x27;Whether the workflow definition is active&#x27;,
-    default: true
+    default: true,
   })
   @IsOptional()
   @IsBoolean()

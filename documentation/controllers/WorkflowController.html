@@ -159,6 +159,13 @@
                                     <span class="modifier"></span>
                                     <span class="modifier"></span>
                                     <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#executeWorkflow" >executeWorkflow</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
                                 <a href="#findAll" >findAll</a>
                             </li>
                             <li>
@@ -168,6 +175,13 @@
                                     <span class="modifier"></span>
                                     <span class="modifier"></span>
                                 <a href="#findOne" >findOne</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#getWorkflowInstance" >getWorkflowInstance</a>
                             </li>
                             <li>
                                     <span class="modifier"></span>
@@ -261,8 +275,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="354"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:354</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="495"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:495</a></div>
                         </td>
                     </tr>
 
@@ -340,8 +354,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="162"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:162</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="274"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:274</a></div>
                         </td>
                     </tr>
 
@@ -391,6 +405,97 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="executeWorkflow"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>executeWorkflow</b></span>
+                        <a href="#executeWorkflow"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>executeWorkflow(id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, startWorkflowDto: <a href="../classes/StartWorkflowDto.html" target="_self">StartWorkflowDto</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Post(&#x27;:id/execute&#x27;)<br />@ApiOperation({summary: &#x27;Execute a workflow&#x27;})<br />@ApiResponse({status: 201, description: &#x27;The workflow has been started successfully.&#x27;, type: WorkflowInstance})<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="381"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:381</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>id</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>startWorkflowDto</td>
+                                            <td>
+                                                            <code><a href="../classes/StartWorkflowDto.html" target="_self" >StartWorkflowDto</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../entitys/WorkflowInstance.html" target="_self" >Promise&lt;WorkflowInstance&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="findAll"></a>
                     <span class="name">
                             <span class="modifier"></span>
@@ -418,8 +523,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="173"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:173</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="285"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:285</a></div>
                         </td>
                     </tr>
 
@@ -468,8 +573,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="189"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:189</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="301"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:301</a></div>
                         </td>
                     </tr>
 
@@ -519,6 +624,85 @@
         <tbody>
             <tr>
                 <td class="col-md-4">
+                    <a name="getWorkflowInstance"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>getWorkflowInstance</b></span>
+                        <a href="#getWorkflowInstance"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getWorkflowInstance(id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Get(&#x27;instances/:id&#x27;)<br />@ApiOperation({summary: &#x27;Get workflow instance status&#x27;})<br />@ApiResponse({status: 200, description: &#x27;Returns the workflow instance details&#x27;, type: WorkflowInstance})<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="395"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:395</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>id</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../entitys/WorkflowInstance.html" target="_self" >Promise&lt;WorkflowInstance&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
                     <a name="pauseWorkflow"></a>
                     <span class="name">
                             <span class="modifier"></span>
@@ -548,8 +732,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="322"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:322</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="463"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:463</a></div>
                         </td>
                     </tr>
 
@@ -629,8 +813,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="258"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:258</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="370"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:370</a></div>
                         </td>
                     </tr>
 
@@ -709,8 +893,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="338"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:338</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="479"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:479</a></div>
                         </td>
                     </tr>
 
@@ -789,8 +973,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="303"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:303</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="444"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:444</a></div>
                         </td>
                     </tr>
 
@@ -870,8 +1054,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="239"
-                                    class="link-to-prism">src/workflow/workflow.controller.ts:239</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="351"
+                                    class="link-to-prism">src/workflow/workflow.controller.ts:351</a></div>
                         </td>
                     </tr>
 
@@ -940,6 +1124,7 @@
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -965,7 +1150,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: &#x27;Create a new workflow definition&#x27; })
@@ -1092,6 +1277,117 @@ export class WorkflowController {
           },
         },
       },
+      loanProcessing: {
+        summary: &#x27;Loan Processing Workflow&#x27;,
+        value: {
+          name: &#x27;Loan Processing Workflow&#x27;,
+          description:
+            &#x27;Processes loan applications with credit check and risk assessment&#x27;,
+          steps: [
+            {
+              id: &#x27;validate-application&#x27;,
+              name: &#x27;Validate Loan Application&#x27;,
+              type: &#x27;TASK&#x27;,
+              dependencies: [],
+              config: {
+                handler: &#x27;loanValidator&#x27;,
+                inputMapping: {
+                  applicantName: &#x27;$.input.applicantName&#x27;,
+                  income: &#x27;$.input.income&#x27;,
+                  loanAmount: &#x27;$.input.loanAmount&#x27;,
+                  loanTerm: &#x27;$.input.loanTerm&#x27;,
+                },
+                outputMapping: {
+                  isValid: &#x27;$.output.isValid&#x27;,
+                  validationErrors: &#x27;$.output.errors&#x27;,
+                },
+              },
+            },
+            {
+              id: &#x27;check-credit&#x27;,
+              name: &#x27;Credit Score Check&#x27;,
+              type: &#x27;TASK&#x27;,
+              dependencies: [&#x27;validate-application&#x27;],
+              config: {
+                handler: &#x27;creditChecker&#x27;,
+                inputMapping: {
+                  applicantName: &#x27;$.input.applicantName&#x27;,
+                  ssn: &#x27;$.input.ssn&#x27;,
+                },
+                outputMapping: {
+                  creditScore: &#x27;$.output.score&#x27;,
+                  creditReport: &#x27;$.output.report&#x27;,
+                },
+              },
+            },
+            {
+              id: &#x27;assess-risk&#x27;,
+              name: &#x27;Risk Assessment&#x27;,
+              type: &#x27;TASK&#x27;,
+              dependencies: [&#x27;check-credit&#x27;],
+              config: {
+                handler: &#x27;riskAssessor&#x27;,
+                inputMapping: {
+                  creditScore: &#x27;$.steps.check-credit.output.creditScore&#x27;,
+                  income: &#x27;$.input.income&#x27;,
+                  loanAmount: &#x27;$.input.loanAmount&#x27;,
+                  loanTerm: &#x27;$.input.loanTerm&#x27;,
+                },
+                outputMapping: {
+                  riskLevel: &#x27;$.output.riskLevel&#x27;,
+                  recommendedRate: &#x27;$.output.recommendedRate&#x27;,
+                },
+              },
+            },
+            {
+              id: &#x27;make-decision&#x27;,
+              name: &#x27;Loan Decision&#x27;,
+              type: &#x27;TASK&#x27;,
+              dependencies: [&#x27;assess-risk&#x27;],
+              config: {
+                handler: &#x27;loanDecision&#x27;,
+                inputMapping: {
+                  riskLevel: &#x27;$.steps.assess-risk.output.riskLevel&#x27;,
+                  recommendedRate: &#x27;$.steps.assess-risk.output.recommendedRate&#x27;,
+                  creditScore: &#x27;$.steps.check-credit.output.creditScore&#x27;,
+                },
+                outputMapping: {
+                  approved: &#x27;$.output.approved&#x27;,
+                  loanId: &#x27;$.output.loanId&#x27;,
+                  interestRate: &#x27;$.output.interestRate&#x27;,
+                  reason: &#x27;$.output.reason&#x27;,
+                },
+              },
+            },
+          ],
+          inputSchema: {
+            type: &#x27;object&#x27;,
+            properties: {
+              applicantName: { type: &#x27;string&#x27; },
+              ssn: { type: &#x27;string&#x27; },
+              income: { type: &#x27;number&#x27; },
+              loanAmount: { type: &#x27;number&#x27; },
+              loanTerm: { type: &#x27;number&#x27; },
+            },
+            required: [
+              &#x27;applicantName&#x27;,
+              &#x27;ssn&#x27;,
+              &#x27;income&#x27;,
+              &#x27;loanAmount&#x27;,
+              &#x27;loanTerm&#x27;,
+            ],
+          },
+          outputSchema: {
+            type: &#x27;object&#x27;,
+            properties: {
+              approved: { type: &#x27;boolean&#x27; },
+              loanId: { type: &#x27;string&#x27; },
+              interestRate: { type: &#x27;number&#x27; },
+              reason: { type: &#x27;string&#x27; },
+            },
+          },
+        },
+      },
     },
   })
   create(@Body() createWorkflowDto: CreateWorkflowDefinitionDto) {
@@ -1192,6 +1488,35 @@ export class WorkflowController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param(&#x27;id&#x27;) id: string) {
     return this.workflowService.remove(id);
+  }
+
+  @Post(&#x27;:id/execute&#x27;)
+  @ApiOperation({ summary: &#x27;Execute a workflow&#x27; })
+  @ApiResponse({
+    status: 201,
+    description: &#x27;The workflow has been started successfully.&#x27;,
+    type: WorkflowInstance,
+  })
+  async executeWorkflow(
+    @Param(&#x27;id&#x27;) id: string,
+    @Body() startWorkflowDto: StartWorkflowDto,
+  ): Promise&lt;WorkflowInstance&gt; {
+    return this.workflowExecutionService.startWorkflow(id, startWorkflowDto.input);
+  }
+
+  @Get(&#x27;instances/:id&#x27;)
+  @ApiOperation({ summary: &#x27;Get workflow instance status&#x27; })
+  @ApiResponse({
+    status: 200,
+    description: &#x27;Returns the workflow instance details&#x27;,
+    type: WorkflowInstance,
+  })
+  async getWorkflowInstance(@Param(&#x27;id&#x27;) id: string): Promise&lt;WorkflowInstance&gt; {
+    const instance &#x3D; await this.workflowService.findInstanceById(id);
+    if (!instance) {
+      throw new NotFoundException(&#x60;Workflow instance ${id} not found&#x60;);
+    }
+    return instance;
   }
 
   @Post(&#x27;execute&#x27;)

@@ -237,7 +237,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="70" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:70</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="77" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:77</a></div>
                         </td>
                     </tr>
 
@@ -274,7 +274,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="32" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:32</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="39" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:39</a></div>
                         </td>
                     </tr>
 
@@ -312,7 +312,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="21" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:21</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="28" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:28</a></div>
                         </td>
                     </tr>
 
@@ -349,7 +349,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="8" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:8</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="15" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:15</a></div>
                         </td>
                     </tr>
 
@@ -386,7 +386,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="12" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:12</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="19" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:19</a></div>
                         </td>
                     </tr>
 
@@ -425,7 +425,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="48" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:48</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="55" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:55</a></div>
                         </td>
                     </tr>
 
@@ -464,7 +464,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="59" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:59</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="66" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:66</a></div>
                         </td>
                     </tr>
 
@@ -501,7 +501,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="16" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:16</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="23" class="link-to-prism">src/workflow/dto/workflow-step.dto.ts:23</a></div>
                         </td>
                     </tr>
 
@@ -520,7 +520,14 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { IsString, IsEnum, IsArray, IsObject, IsOptional, IsNumber } from &#x27;class-validator&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import {
+  IsString,
+  IsEnum,
+  IsArray,
+  IsObject,
+  IsOptional,
+  IsNumber,
+} from &#x27;class-validator&#x27;;
 import { StepType } from &#x27;../entities/workflow-definition.entity&#x27;;
 import { ApiProperty, ApiPropertyOptional } from &#x27;@nestjs/swagger&#x27;;
 
@@ -547,8 +554,8 @@ export class WorkflowStepDto {
     example: {
       handler: &#x27;sendEmail&#x27;,
       inputMapping: { email: &#x27;$.input.email&#x27; },
-      outputMapping: { result: &#x27;$.output.sent&#x27; }
-    }
+      outputMapping: { result: &#x27;$.output.sent&#x27; },
+    },
   })
   @IsObject()
   config: {
@@ -562,8 +569,8 @@ export class WorkflowStepDto {
     example: {
       maxAttempts: 3,
       backoffMultiplier: 1.5,
-      initialDelay: 1000
-    }
+      initialDelay: 1000,
+    },
   })
   @IsOptional()
   @IsObject()
@@ -574,7 +581,7 @@ export class WorkflowStepDto {
   };
 
   @ApiPropertyOptional({
-    description: &#x27;Timeout in milliseconds for the step execution&#x27;
+    description: &#x27;Timeout in milliseconds for the step execution&#x27;,
   })
   @IsOptional()
   @IsNumber()
@@ -584,8 +591,8 @@ export class WorkflowStepDto {
     description: &#x27;Condition for step execution&#x27;,
     example: {
       expression: &#x27;$.input.amount &gt; 1000&#x27;,
-      type: &#x27;javascript&#x27;
-    }
+      type: &#x27;javascript&#x27;,
+    },
   })
   @IsOptional()
   @IsObject()

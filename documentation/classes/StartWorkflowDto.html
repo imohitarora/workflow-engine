@@ -260,7 +260,7 @@ import { ApiProperty } from &#x27;@nestjs/swagger&#x27;;
 export class StartWorkflowDto {
   @ApiProperty({
     description: &#x27;ID of the workflow definition to execute&#x27;,
-    example: &#x27;123e4567-e89b-12d3-a456-426614174000&#x27;
+    example: &#x27;123e4567-e89b-12d3-a456-426614174000&#x27;,
   })
   @IsString()
   workflowDefinitionId: string;
@@ -270,8 +270,8 @@ export class StartWorkflowDto {
     example: {
       email: &#x27;user@example.com&#x27;,
       orderId: &#x27;12345&#x27;,
-      amount: 99.99
-    }
+      amount: 99.99,
+    },
   })
   @IsObject()
   input: Record&lt;string, any&gt;;

@@ -149,6 +149,10 @@
                             </li>
                             <li>
                                     <span class="modifier">Async</span>
+                                <a href="#findInstanceById" >findInstanceById</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
                                 <a href="#findOne" >findOne</a>
                             </li>
                             <li>
@@ -181,12 +185,12 @@
             <tbody>
                 <tr>
                     <td class="col-md-4">
-<code>constructor(workflowDefinitionRepo: <a href="../entitys/WorkflowDefinition.html" target="_self">Repository&lt;WorkflowDefinition&gt;</a>)</code>
+<code>constructor(workflowDefinitionRepo: <a href="../entitys/WorkflowDefinition.html" target="_self">Repository&lt;WorkflowDefinition&gt;</a>, workflowInstanceRepo: <a href="../entitys/WorkflowInstance.html" target="_self">Repository&lt;WorkflowInstance&gt;</a>)</code>
                     </td>
                 </tr>
                         <tr>
                             <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="9" class="link-to-prism">src/workflow/workflow.service.ts:9</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="10" class="link-to-prism">src/workflow/workflow.service.ts:10</a></div>
                             </td>
                         </tr>
 
@@ -208,6 +212,18 @@
                                                   
                                                         <td>
                                                                         <code><a href="../entitys/WorkflowDefinition.html" target="_self" >Repository&lt;WorkflowDefinition&gt;</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>workflowInstanceRepo</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../entitys/WorkflowInstance.html" target="_self" >Repository&lt;WorkflowInstance&gt;</a></code>
                                                         </td>
                                                   
                                                     <td>
@@ -251,8 +267,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="79"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:79</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="81"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:81</a></div>
                         </td>
                     </tr>
 
@@ -320,8 +336,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="15"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:15</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="18"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:18</a></div>
                         </td>
                     </tr>
 
@@ -389,8 +405,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="22"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:22</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="25"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:25</a></div>
                         </td>
                     </tr>
 
@@ -402,6 +418,75 @@
                             <b>Returns : </b>        <code><a href="../entitys/WorkflowDefinition.html" target="_self" >Promise&lt;WorkflowDefinition[]&gt;</a></code>
 
                         </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="findInstanceById"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>findInstanceById</b></span>
+                        <a href="#findInstanceById"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>findInstanceById(id: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="47"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:47</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>id</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../entitys/WorkflowInstance.html" target="_self" >Promise&lt;WorkflowInstance&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
                 </td>
             </tr>
         </tbody>
@@ -428,8 +513,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="26"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:26</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="29"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:29</a></div>
                         </td>
                     </tr>
 
@@ -497,8 +582,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="47"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:47</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="42"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:42</a></div>
                         </td>
                     </tr>
 
@@ -566,8 +651,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="38"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:38</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="33"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:33</a></div>
                         </td>
                     </tr>
 
@@ -647,8 +732,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="52"
-                                    class="link-to-prism">src/workflow/workflow.service.ts:52</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="54"
+                                    class="link-to-prism">src/workflow/workflow.service.ts:54</a></div>
                         </td>
                     </tr>
 
@@ -704,6 +789,7 @@
 import { InjectRepository } from &#x27;@nestjs/typeorm&#x27;;
 import { Repository } from &#x27;typeorm&#x27;;
 import { WorkflowDefinition } from &#x27;./entities/workflow-definition.entity&#x27;;
+import { WorkflowInstance } from &#x27;./entities/workflow-instance.entity&#x27;;
 import { CreateWorkflowDefinitionDto } from &#x27;./dto/create-workflow-definition.dto&#x27;;
 import { UpdateWorkflowDefinitionDto } from &#x27;./dto/update-workflow-definition.dto&#x27;;
 
@@ -712,6 +798,8 @@ export class WorkflowService {
   constructor(
     @InjectRepository(WorkflowDefinition)
     private workflowDefinitionRepo: Repository&lt;WorkflowDefinition&gt;,
+    @InjectRepository(WorkflowInstance)
+    private workflowInstanceRepo: Repository&lt;WorkflowInstance&gt;,
   ) {}
 
   async create(
@@ -726,15 +814,7 @@ export class WorkflowService {
   }
 
   async findOne(id: string): Promise&lt;WorkflowDefinition&gt; {
-    const workflow &#x3D; await this.workflowDefinitionRepo.findOne({
-      where: { id },
-    });
-    if (!workflow) {
-      throw new NotFoundException(
-        &#x60;Workflow definition with ID &quot;${id}&quot; not found&#x60;,
-      );
-    }
-    return workflow;
+    return this.workflowDefinitionRepo.findOneBy({ id });
   }
 
   async update(
@@ -749,6 +829,13 @@ export class WorkflowService {
   async remove(id: string): Promise&lt;void&gt; {
     const workflow &#x3D; await this.findOne(id);
     await this.workflowDefinitionRepo.remove(workflow);
+  }
+
+  async findInstanceById(id: string): Promise&lt;WorkflowInstance&gt; {
+    return this.workflowInstanceRepo.findOne({
+      where: { id },
+      relations: [&#x27;workflowDefinition&#x27;],
+    });
   }
 
   async validateWorkflowDefinition(

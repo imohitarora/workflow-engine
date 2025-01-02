@@ -79,7 +79,7 @@
                    <compodoc-menu mode="normal"></compodoc-menu>
                </div>
                <!-- START CONTENT -->
-               <div class="content class">
+               <div class="content miscellaneous-variables">
                    <div class="content-data">
 
 
@@ -93,76 +93,67 @@
 
 
 
+
+
+
+
+
+
 <ol class="breadcrumb">
-  <li class="breadcrumb-item">Classes</li>
-  <li class="breadcrumb-item" >UpdateWorkflowDefinitionDto</li>
+  <li class="breadcrumb-item">Miscellaneous</li>
+  <li class="breadcrumb-item">Variables</li>
 </ol>
 
-<ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item">
-            <a href="#info" 
-                class="nav-link"
-                class="nav-link active"
-                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
-        </li>
-        <li class="nav-item">
-            <a href="#source" 
-                class="nav-link"
-                
-                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
-        </li>
-</ul>
+<section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <ul class="index-list">
+                        <li>
+                            <a href="#TestDatabaseModule" title="test/test-database.module.ts" ><b>TestDatabaseModule</b>&nbsp;&nbsp;&nbsp;(test/.../test-database.module.ts)</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
 
-<div class="tab-content">
-    <div class="tab-pane fade active in" id="info">
-        <p class="comment">
-            <h3>File</h3>
-        </p>
-        <p class="comment">
-            <code>src/workflow/dto/update-workflow-definition.dto.ts</code>
-        </p>
-
-
-
-            <p class="comment">
-                <h3>Extends</h3>
-            </p>
-            <p class="comment">
-                            <code><a href="../classes/CreateWorkflowDefinitionDto.html" target="_self" >PartialType(
-  CreateWorkflowDefinitionDto,
-)</a></code>
-            </p>
-
-
-
-
-
-
-
-
-
-
-
-
-    </div>
+    <h3>test/test-database.module.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="TestDatabaseModule"></a>
+                    <span class="name">
+                        <span ><b>TestDatabaseModule</b></span>
+                        <a href="#TestDatabaseModule"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>TypeOrmModule.forRoot({
+  type: &#x27;postgres&#x27;,
+  host: process.env.TEST_DB_HOST || &#x27;localhost&#x27;,
+  port: parseInt(process.env.TEST_DB_PORT, 10) || 5432,
+  username: process.env.TEST_DB_USERNAME || &#x27;postgres&#x27;,
+  password: process.env.TEST_DB_PASSWORD || &#x27;postgres&#x27;,
+  database: process.env.TEST_DB_NAME || &#x27;workflow_engine_test&#x27;,
+  entities: [WorkflowDefinition, WorkflowInstance],
+  synchronize: true, // Only for testing
+  dropSchema: true, // Clean state for each test run
+})</code>
+                    </td>
+                </tr>
 
 
-    <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { PartialType } from &#x27;@nestjs/mapped-types&#x27;;
-import { CreateWorkflowDefinitionDto } from &#x27;./create-workflow-definition.dto&#x27;;
-
-export class UpdateWorkflowDefinitionDto extends PartialType(
-  CreateWorkflowDefinitionDto,
-) {}
-</code></pre>
-    </div>
-</div>
-
-
-
-
-
-
+        </tbody>
+    </table>
+</section>
 
 
 
@@ -191,8 +182,8 @@ export class UpdateWorkflowDefinitionDto extends PartialType(
 
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
-            var COMPODOC_CURRENT_PAGE_CONTEXT = 'class';
-            var COMPODOC_CURRENT_PAGE_URL = 'UpdateWorkflowDefinitionDto.html';
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'miscellaneous-variables';
+            var COMPODOC_CURRENT_PAGE_URL = 'variables.html';
             var MAX_SEARCH_RESULTS = 15;
        </script>
 

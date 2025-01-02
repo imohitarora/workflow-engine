@@ -223,7 +223,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="51" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:51</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="59" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:59</a></div>
                         </td>
                     </tr>
 
@@ -259,7 +259,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="42" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:42</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="50" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:50</a></div>
                         </td>
                     </tr>
 
@@ -295,7 +295,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="16" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:16</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="24" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:24</a></div>
                         </td>
                     </tr>
 
@@ -331,7 +331,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="26" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:26</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="34" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:34</a></div>
                         </td>
                     </tr>
 
@@ -367,7 +367,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="29" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:29</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="37" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:37</a></div>
                         </td>
                     </tr>
 
@@ -403,7 +403,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="48" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:48</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="56" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:56</a></div>
                         </td>
                     </tr>
 
@@ -439,7 +439,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="32" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:32</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="40" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:40</a></div>
                         </td>
                     </tr>
 
@@ -475,7 +475,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="39" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:39</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="47" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:47</a></div>
                         </td>
                     </tr>
 
@@ -511,7 +511,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="45" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:45</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="53" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:53</a></div>
                         </td>
                     </tr>
 
@@ -548,7 +548,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="23" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:23</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="31" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:31</a></div>
                         </td>
                     </tr>
 
@@ -584,7 +584,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="19" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:19</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="27" class="link-to-prism">src/workflow/entities/workflow-instance.entity.ts:27</a></div>
                         </td>
                     </tr>
 
@@ -596,7 +596,15 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from &#x27;typeorm&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from &#x27;typeorm&#x27;;
 import { WorkflowDefinition } from &#x27;./workflow-definition.entity&#x27;;
 
 export enum WorkflowStatus {

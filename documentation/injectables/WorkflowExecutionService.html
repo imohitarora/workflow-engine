@@ -323,8 +323,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="462"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:462</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="449"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:449</a></div>
                         </td>
                     </tr>
 
@@ -393,8 +393,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="294"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:294</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="286"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:286</a></div>
                         </td>
                     </tr>
 
@@ -475,8 +475,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="327"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:327</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="319"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:319</a></div>
                         </td>
                     </tr>
 
@@ -557,8 +557,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="318"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:318</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="310"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:310</a></div>
                         </td>
                     </tr>
 
@@ -627,8 +627,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="249"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:249</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="236"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:236</a></div>
                         </td>
                     </tr>
 
@@ -697,8 +697,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="345"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:345</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="337"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:337</a></div>
                         </td>
                     </tr>
 
@@ -779,8 +779,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="268"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:268</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="255"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:255</a></div>
                         </td>
                     </tr>
 
@@ -943,8 +943,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="210"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:210</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="197"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:197</a></div>
                         </td>
                     </tr>
 
@@ -1162,8 +1162,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="414"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:414</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="406"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:406</a></div>
                         </td>
                     </tr>
 
@@ -1231,8 +1231,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="409"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:409</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="401"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:401</a></div>
                         </td>
                     </tr>
 
@@ -1300,8 +1300,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="430"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:430</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="417"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:417</a></div>
                         </td>
                     </tr>
 
@@ -1369,8 +1369,8 @@
 
                     <tr>
                         <td class="col-md-4">
-                            <div class="io-line">Defined in <a href="" data-line="443"
-                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:443</a></div>
+                            <div class="io-line">Defined in <a href="" data-line="430"
+                                    class="link-to-prism">src/workflow/workflow-execution.service.ts:430</a></div>
                         </td>
                     </tr>
 
@@ -1663,7 +1663,7 @@ export class WorkflowExecutionService {
         await this.workflowInstanceRepo.save(instance);
 
         // Execute step based on type
-        let result;
+        let result: TaskResult;
         switch (step.type) {
           case StepType.TASK:
             result &#x3D; await this.executeTask(instance, step);
@@ -1684,7 +1684,7 @@ export class WorkflowExecutionService {
         );
         stepState.status &#x3D; StepStatus.COMPLETED;
         stepState.endTime &#x3D; new Date();
-        stepState.output &#x3D; result;
+        stepState.output &#x3D; result.output;
 
         // Move step from current to completed
         instance.state.completedSteps.push(stepState);
@@ -1692,10 +1692,13 @@ export class WorkflowExecutionService {
           (s) &#x3D;&gt; s.stepId !&#x3D;&#x3D; step.id,
         );
 
-        // Update instance state
+        // Update instance state variables with step output
         instance.state.variables &#x3D; {
           ...instance.state.variables,
-          [step.id]: result,
+          [step.id]: {
+            output: result.output,
+            status: StepStatus.COMPLETED,
+          },
         };
 
         await this.workflowInstanceRepo.save(instance);
@@ -1722,25 +1725,9 @@ export class WorkflowExecutionService {
         stepState.status &#x3D; StepStatus.FAILED;
         stepState.error &#x3D; error.message;
 
-        if (
-          step.retryConfig &amp;&amp;
-          stepState.attempts &lt; step.retryConfig.maxAttempts
-        ) {
-          // Implement retry logic
-          stepState.attempts +&#x3D; 1;
-          const delay &#x3D;
-            step.retryConfig.initialDelay *
-            Math.pow(
-              step.retryConfig.backoffMultiplier,
-              stepState.attempts - 1,
-            );
-          await new Promise((resolve) &#x3D;&gt; setTimeout(resolve, delay));
-          await this.executeSteps(instance, [step.id]);
-        } else {
-          instance.status &#x3D; WorkflowStatus.FAILED;
-          await this.workflowInstanceRepo.save(instance);
-          throw error;
-        }
+        instance.status &#x3D; WorkflowStatus.FAILED;
+        await this.workflowInstanceRepo.save(instance);
+        throw error;
       }
     }
   }
@@ -1752,7 +1739,7 @@ export class WorkflowExecutionService {
     try {
       this.logger.debug(&#x60;Executing task: ${step.name}&#x60;);
 
-      switch (step.type) {
+      switch (step.config.type) {
         case TaskType.HTTP:
           return await this.executeHttpTask(step.config);
 
@@ -1772,7 +1759,7 @@ export class WorkflowExecutionService {
           return await this.executeDelay(step.config);
 
         default:
-          throw new Error(&#x60;Unsupported task type: ${step.type}&#x60;);
+          throw new Error(&#x60;Unsupported task type: ${step.config.type}&#x60;);
       }
     } catch (error) {
       this.logger.error(&#x60;Task execution failed: ${error.message}&#x60;);
@@ -1809,15 +1796,20 @@ export class WorkflowExecutionService {
   ): Promise&lt;TaskResult&gt; {
     const { script } &#x3D; config;
     try {
-      // Safe eval with context
-      const context &#x3D; { ...variables };
+      // Create a safe context with variables
+      const context &#x3D; {
+        ...variables,
+        // Add helper functions if needed
+        JSON: JSON,
+      };
+
       const result &#x3D; new Function(
         &#x27;context&#x27;,
         &#x60;
         with (context) {
           ${script}
         }
-      &#x60;,
+        &#x60;,
       )(context);
 
       return {
@@ -1952,17 +1944,12 @@ export class WorkflowExecutionService {
   private generateWorkflowOutput(
     instance: WorkflowInstance,
   ): Record&lt;string, any&gt; {
-    const output: Record&lt;string, any&gt; &#x3D; {};
-    const { outputSchema } &#x3D; instance.workflowDefinition;
-
-    // Map the final state variables to the output schema
-    for (const [key, mapping] of Object.entries(outputSchema)) {
-      if (typeof mapping &#x3D;&#x3D;&#x3D; &#x27;string&#x27; &amp;&amp; mapping in instance.state.variables) {
-        output[key] &#x3D; instance.state.variables[mapping];
-      }
+    // Find the last step that generates output
+    const lastStep &#x3D; instance.state.completedSteps[instance.state.completedSteps.length - 1];
+    if (lastStep &amp;&amp; lastStep.output) {
+      return lastStep.output;
     }
-
-    return output;
+    return {};
   }
 
   async pauseWorkflow(instanceId: string): Promise&lt;WorkflowInstance&gt; {

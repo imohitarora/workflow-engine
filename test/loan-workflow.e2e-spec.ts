@@ -8,17 +8,21 @@ import { TestDatabaseModule } from './test-database.module';
 describe('Loan Workflow Execution (e2e)', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [TestDatabaseModule, AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
-  });
+  }, 10000); // Increased timeout
 
-  afterEach(async () => {
-    await app.close();
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+      // Add a small delay to ensure all connections are closed
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
   });
 
   it('should process a loan application successfully', async () => {
