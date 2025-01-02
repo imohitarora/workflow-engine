@@ -5,9 +5,53 @@ import {
   IsObject,
   IsOptional,
   IsNumber,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { StepType } from '../entities/workflow-definition.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class StepConfigDto {
+  @ApiProperty({ description: 'Type of task (script, http, human)' })
+  @IsString()
+  type: string;
+
+  @ApiProperty({ description: 'Handler for the task' })
+  @IsString()
+  handler: string;
+
+  @ApiProperty({ description: 'Input mapping for the task' })
+  @IsObject()
+  inputMapping: Record<string, string>;
+
+  @ApiProperty({ description: 'Output mapping for the task' })
+  @IsObject()
+  outputMapping: Record<string, string>;
+}
+
+export class RetryConfigDto {
+  @ApiProperty({ description: 'Maximum number of attempts' })
+  @IsNumber()
+  maxAttempts: number;
+
+  @ApiProperty({ description: 'Backoff multiplier' })
+  @IsNumber()
+  backoffMultiplier: number;
+
+  @ApiProperty({ description: 'Initial delay in milliseconds' })
+  @IsNumber()
+  initialDelay: number;
+}
+
+export class ConditionDto {
+  @ApiProperty({ description: 'Condition expression' })
+  @IsString()
+  expression: string;
+
+  @ApiProperty({ description: 'Condition type' })
+  @IsEnum(['javascript', 'jsonpath'])
+  type: 'javascript' | 'jsonpath';
+}
 
 export class WorkflowStepDto {
   @ApiProperty({ description: 'Unique identifier for the workflow step' })
@@ -29,34 +73,20 @@ export class WorkflowStepDto {
 
   @ApiProperty({
     description: 'Configuration for the step execution',
-    example: {
-      handler: 'sendEmail',
-      inputMapping: { email: '$.input.email' },
-      outputMapping: { result: '$.output.sent' },
-    },
+    type: StepConfigDto,
   })
-  @IsObject()
-  config: {
-    handler: string;
-    inputMapping: Record<string, string>;
-    outputMapping: Record<string, string>;
-  };
+  @ValidateNested()
+  @Type(() => StepConfigDto)
+  config: StepConfigDto;
 
   @ApiPropertyOptional({
     description: 'Retry configuration for failed steps',
-    example: {
-      maxAttempts: 3,
-      backoffMultiplier: 1.5,
-      initialDelay: 1000,
-    },
+    type: RetryConfigDto,
   })
   @IsOptional()
-  @IsObject()
-  retryConfig?: {
-    maxAttempts: number;
-    backoffMultiplier: number;
-    initialDelay: number;
-  };
+  @ValidateNested()
+  @Type(() => RetryConfigDto)
+  retryConfig?: RetryConfigDto;
 
   @ApiPropertyOptional({
     description: 'Timeout in milliseconds for the step execution',
@@ -67,15 +97,10 @@ export class WorkflowStepDto {
 
   @ApiPropertyOptional({
     description: 'Condition for step execution',
-    example: {
-      expression: '$.input.amount > 1000',
-      type: 'javascript',
-    },
+    type: ConditionDto,
   })
   @IsOptional()
-  @IsObject()
-  condition?: {
-    expression: string;
-    type: 'javascript' | 'jsonpath';
-  };
+  @ValidateNested()
+  @Type(() => ConditionDto)
+  condition?: ConditionDto;
 }

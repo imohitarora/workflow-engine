@@ -24,7 +24,6 @@ describe('WorkflowExecutionService', () => {
     updatedAt: new Date(),
     inputSchema: {},
     outputSchema: {},
-    isActive: true,
   };
 
   const mockWorkflowInstance: WorkflowInstance = {

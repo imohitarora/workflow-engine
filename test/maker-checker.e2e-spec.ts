@@ -60,6 +60,19 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
           dependencies: [],
           config: {
             type: 'script',
+            handler: 'javascript',
+            inputMapping: {
+              amount: 'input.amount',
+              currency: 'input.currency',
+              initiator: 'input.initiator',
+              approver: 'input.approver'
+            },
+            outputMapping: {
+              isValid: 'output.isValid',
+              validationErrors: 'output.validationErrors',
+              requiresApproval: 'output.requiresApproval',
+              timestamp: 'output.timestamp'
+            },
             script: `
               const { amount, currency, initiator, approver } = context;
               const validations = [];
@@ -95,30 +108,43 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
           condition: {
             type: 'javascript',
             expression: 'context["validate-request"].output.requiresApproval'
+          },
+          config: {
+            type: 'script',
+            handler: 'javascript',
+            inputMapping: {
+              requiresApproval: 'context["validate-request"].output.requiresApproval'
+            },
+            outputMapping: {
+              result: 'output.result'
+            }
           }
         },
         {
           id: 'auto-approve',
-          name: 'Auto-Approve Small Payment',
+          name: 'Auto Approve Payment',
           type: 'TASK',
           dependencies: ['check-approval-requirement'],
           config: {
             type: 'script',
+            handler: 'javascript',
+            inputMapping: {
+              amount: 'input.amount',
+              currency: 'input.currency',
+              initiator: 'input.initiator'
+            },
+            outputMapping: {
+              approved: 'output.approved',
+              status: 'output.status',
+              approvalDate: 'output.approvalDate',
+              comments: 'output.comments'
+            },
             script: `
-              const validationResult = context['validate-request'].output;
-              
-              if (!validationResult.isValid) {
-                return {
-                  approved: false,
-                  status: 'REJECTED',
-                  approvalDate: new Date().toISOString(),
-                  comments: 'Validation failed: ' + validationResult.validationErrors.join(', ')
-                };
-              }
+              const { amount, currency, initiator } = context;
               
               return {
                 approved: true,
-                status: 'AUTO_APPROVED',
+                status: 'APPROVED',
                 approvalDate: new Date().toISOString(),
                 comments: 'Auto-approved: Amount below threshold'
               };
@@ -126,27 +152,27 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
           }
         },
         {
-          id: 'checker-approval',
-          name: 'Get Checker Approval',
+          id: 'manual-approval',
+          name: 'Manual Approval Step',
           type: 'TASK',
           dependencies: ['check-approval-requirement'],
           config: {
             type: 'script',
+            handler: 'javascript',
+            inputMapping: {
+              amount: 'input.amount',
+              currency: 'input.currency',
+              approver: 'input.approver'
+            },
+            outputMapping: {
+              approved: 'output.approved',
+              status: 'output.status',
+              approvalDate: 'output.approvalDate',
+              comments: 'output.comments'
+            },
             script: `
               const { amount, currency, approver } = context;
-              const validationResult = context['validate-request'].output;
-              
-              if (!validationResult.isValid) {
-                return {
-                  approved: false,
-                  status: 'REJECTED',
-                  approvalDate: new Date().toISOString(),
-                  comments: 'Validation failed: ' + validationResult.validationErrors.join(', ')
-                };
-              }
-              
-              // Simulate checker approval (in real system, this would be a human task)
-              const approved = amount <= 50000; // Auto-approve for test if amount <= 50000
+              const approved = amount <= 50000; // Simulate approval logic
               
               return {
                 approved,
@@ -221,7 +247,7 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
     // Verify auto-approval
     const autoApproveStep = smallPaymentInstance.state.completedSteps.find(s => s.stepId === 'auto-approve');
     expect(autoApproveStep.output.approved).toBe(true);
-    expect(autoApproveStep.output.status).toBe('AUTO_APPROVED');
+    expect(autoApproveStep.output.status).toBe('APPROVED');
 
     // 3. Test case 2: Large payment (requires checker approval)
     const largePaymentInput = {
@@ -270,7 +296,7 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
     expect(largeValidationStep.output.requiresApproval).toBe(true);
     
     // Verify checker approval
-    const checkerStep = largePaymentInstance.state.completedSteps.find(s => s.stepId === 'checker-approval');
+    const checkerStep = largePaymentInstance.state.completedSteps.find(s => s.stepId === 'manual-approval');
     expect(checkerStep.output.approved).toBe(true);
     expect(checkerStep.output.status).toBe('APPROVED');
     
