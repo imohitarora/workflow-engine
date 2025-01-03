@@ -20,8 +20,14 @@ describe('Loan Workflow Execution (e2e)', () => {
   afterAll(async () => {
     if (app) {
       await app.close();
-      // Add a small delay to ensure all connections are closed
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Use unref() to allow the process to exit if this is the only remaining handle
+      const cleanup = setTimeout(() => {}, 1000);
+      cleanup.unref();
+      // Wait for connections to close
+      await new Promise((resolve) => {
+        const timer = setTimeout(resolve, 1000);
+        timer.unref();
+      });
     }
   });
 

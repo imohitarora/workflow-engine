@@ -1,5 +1,9 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
@@ -7,6 +11,9 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "globalSetup": "<rootDir>/jest-global-setup.ts",
-  "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
-  "testTimeout": 10000
+  "setupFilesAfterEnv": [
+    "<rootDir>/jest.setup.ts"
+  ],
+  "testTimeout": 10000,
+  "testSequencer": "<rootDir>/custom-sequencer.js"
 }

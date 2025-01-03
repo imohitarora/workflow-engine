@@ -17,7 +17,7 @@ export class WorkflowService {
     private workflowDefinitionRepo: Repository<WorkflowDefinition>,
     @InjectRepository(WorkflowInstance)
     private workflowInstanceRepo: Repository<WorkflowInstance>,
-  ) {}
+  ) { }
 
   async create(
     createDto: CreateWorkflowDefinitionDto,
@@ -28,10 +28,10 @@ export class WorkflowService {
       description: createDto.description,
       steps: createDto.steps.map((step) => ({
         ...step,
-        config: {
+        config: step.config ? {
           ...step.config,
           type: step.config.type as 'human' | 'script' | 'http',
-        },
+        } : undefined,
       })),
       inputSchema: createDto.inputSchema,
       outputSchema: createDto.outputSchema,
