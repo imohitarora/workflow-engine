@@ -15,15 +15,13 @@ export class ViewsController {
     ]);
 
     const activeWorkflows = instances.filter(
-      (instance) => instance.status === 'RUNNING'
+      (instance) => instance.status === 'RUNNING',
     ).length;
 
-    const activities = instances
-      .slice(0, 10)
-      .map((instance) => ({
-        description: `Workflow ${instance.id} - ${instance.status}`,
-        timestamp: instance.createdAt,
-      }));
+    const activities = instances.slice(0, 10).map((instance) => ({
+      description: `Workflow ${instance.id} - ${instance.status}`,
+      timestamp: instance.createdAt,
+    }));
 
     return {
       stats: {

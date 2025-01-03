@@ -1,9 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum StepType {
   TASK = 'TASK',
   DECISION = 'DECISION',
-  PARALLEL = 'PARALLEL'
+  PARALLEL = 'PARALLEL',
 }
 
 export type TaskType = 'script' | 'http' | 'human';

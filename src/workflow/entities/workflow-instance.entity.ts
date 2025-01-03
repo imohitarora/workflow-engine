@@ -7,7 +7,11 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { WorkflowDefinition, StepType, StepConfig } from './workflow-definition.entity';
+import {
+  WorkflowDefinition,
+  StepType,
+  StepConfig,
+} from './workflow-definition.entity';
 
 export enum WorkflowStatus {
   PENDING = 'PENDING',

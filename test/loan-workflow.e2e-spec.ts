@@ -21,7 +21,7 @@ describe('Loan Workflow Execution (e2e)', () => {
     if (app) {
       await app.close();
       // Add a small delay to ensure all connections are closed
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   });
 
@@ -38,9 +38,16 @@ describe('Loan Workflow Execution (e2e)', () => {
           income: { type: 'number' },
           loanAmount: { type: 'number' },
           loanTerm: { type: 'number' }, // in months
-          creditScore: { type: 'number' }
+          creditScore: { type: 'number' },
         },
-        required: ['applicantName', 'email', 'income', 'loanAmount', 'loanTerm', 'creditScore']
+        required: [
+          'applicantName',
+          'email',
+          'income',
+          'loanAmount',
+          'loanTerm',
+          'creditScore',
+        ],
       },
       outputSchema: {
         type: 'object',
@@ -48,8 +55,8 @@ describe('Loan Workflow Execution (e2e)', () => {
           approved: { type: 'boolean' },
           interestRate: { type: 'number' },
           monthlyPayment: { type: 'number' },
-          reason: { type: 'string' }
-        }
+          reason: { type: 'string' },
+        },
       },
       steps: [
         {
@@ -77,8 +84,8 @@ describe('Loan Workflow Execution (e2e)', () => {
                 isValid: validations.length === 0,
                 validationErrors: validations
               };
-            `
-          }
+            `,
+          },
         },
         {
           id: 'check-eligibility',
@@ -120,8 +127,8 @@ describe('Loan Workflow Execution (e2e)', () => {
                 debtToIncome,
                 estimatedMonthlyPayment
               };
-            `
-          }
+            `,
+          },
         },
         {
           id: 'calculate-terms',
@@ -166,10 +173,10 @@ describe('Loan Workflow Execution (e2e)', () => {
                 monthlyPayment: Math.round(monthlyPayment * 100) / 100,
                 reason: 'Loan approved'
               };
-            `
-          }
-        }
-      ]
+            `,
+          },
+        },
+      ],
     };
 
     // Create workflow definition
@@ -188,8 +195,8 @@ describe('Loan Workflow Execution (e2e)', () => {
         income: 100000,
         loanAmount: 300000,
         loanTerm: 360,
-        creditScore: 750
-      }
+        creditScore: 750,
+      },
     };
 
     const startResponse = await request(app.getHttpServer())
@@ -212,34 +219,40 @@ describe('Loan Workflow Execution (e2e)', () => {
 
       status = statusResponse.body.status;
       finalResponse = statusResponse;
-      
+
       if (status === WorkflowStatus.RUNNING) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }
     }
 
     // 4. Verify successful loan application
     expect(status).toBe(WorkflowStatus.COMPLETED);
-    
+
     const workflowInstance = finalResponse.body;
-    
+
     // Verify validation step
-    const validationStep = workflowInstance.state.completedSteps.find(s => s.stepId === 'validate-application');
+    const validationStep = workflowInstance.state.completedSteps.find(
+      (s) => s.stepId === 'validate-application',
+    );
     expect(validationStep.output.isValid).toBe(true);
     expect(validationStep.output.validationErrors).toHaveLength(0);
-    
+
     // Verify eligibility step
-    const eligibilityStep = workflowInstance.state.completedSteps.find(s => s.stepId === 'check-eligibility');
+    const eligibilityStep = workflowInstance.state.completedSteps.find(
+      (s) => s.stepId === 'check-eligibility',
+    );
     expect(eligibilityStep.output.eligible).toBe(true);
     expect(eligibilityStep.output.debtToIncome).toBeLessThan(43);
-    
+
     // Verify final terms
-    const termsStep = workflowInstance.state.completedSteps.find(s => s.stepId === 'calculate-terms');
+    const termsStep = workflowInstance.state.completedSteps.find(
+      (s) => s.stepId === 'calculate-terms',
+    );
     expect(termsStep.output.approved).toBe(true);
     expect(termsStep.output.interestRate).toBe(4.5); // Base rate (5%) - 0.5% for credit score 750
     expect(termsStep.output.monthlyPayment).toBeGreaterThan(0);
-    
+
     // 5. Test rejected loan application (low credit score)
     const rejectedLoanInput = {
       input: {
@@ -248,8 +261,8 @@ describe('Loan Workflow Execution (e2e)', () => {
         income: 100000,
         loanAmount: 300000,
         loanTerm: 360,
-        creditScore: 550
-      }
+        creditScore: 550,
+      },
     };
 
     const rejectedStartResponse = await request(app.getHttpServer())
@@ -271,16 +284,18 @@ describe('Loan Workflow Execution (e2e)', () => {
 
       status = statusResponse.body.status;
       rejectedFinalResponse = statusResponse;
-      
+
       if (status === WorkflowStatus.RUNNING) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }
     }
 
     // Verify rejected loan application
     const rejectedInstance = rejectedFinalResponse.body;
-    const rejectedEligibilityStep = rejectedInstance.state.completedSteps.find(s => s.stepId === 'check-eligibility');
+    const rejectedEligibilityStep = rejectedInstance.state.completedSteps.find(
+      (s) => s.stepId === 'check-eligibility',
+    );
     expect(rejectedEligibilityStep.output.eligible).toBe(false);
     expect(rejectedEligibilityStep.output.reason).toBe('Credit score too low');
   });

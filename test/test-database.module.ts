@@ -20,7 +20,9 @@ import { DataSource } from 'typeorm';
 
         try {
           await tempDataSource.initialize();
-          await tempDataSource.query('DROP DATABASE IF EXISTS workflow_engine_test;');
+          await tempDataSource.query(
+            'DROP DATABASE IF EXISTS workflow_engine_test;',
+          );
           await tempDataSource.query('CREATE DATABASE workflow_engine_test;');
         } catch (error) {
           console.error('Error preparing test database:', error);

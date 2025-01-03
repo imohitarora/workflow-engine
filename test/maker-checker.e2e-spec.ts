@@ -21,7 +21,7 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
     if (app) {
       await app.close();
       // Add a small delay to ensure all connections are closed
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   });
 
@@ -39,9 +39,17 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
           beneficiary: { type: 'string' },
           accountNumber: { type: 'string' },
           initiator: { type: 'string' },
-          approver: { type: 'string' }
+          approver: { type: 'string' },
         },
-        required: ['transactionId', 'amount', 'currency', 'beneficiary', 'accountNumber', 'initiator', 'approver']
+        required: [
+          'transactionId',
+          'amount',
+          'currency',
+          'beneficiary',
+          'accountNumber',
+          'initiator',
+          'approver',
+        ],
       },
       outputSchema: {
         type: 'object',
@@ -49,8 +57,8 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
           approved: { type: 'boolean' },
           status: { type: 'string' },
           approvalDate: { type: 'string' },
-          comments: { type: 'string' }
-        }
+          comments: { type: 'string' },
+        },
       },
       steps: [
         {
@@ -65,13 +73,13 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
               amount: 'input.amount',
               currency: 'input.currency',
               initiator: 'input.initiator',
-              approver: 'input.approver'
+              approver: 'input.approver',
             },
             outputMapping: {
               isValid: 'output.isValid',
               validationErrors: 'output.validationErrors',
               requiresApproval: 'output.requiresApproval',
-              timestamp: 'output.timestamp'
+              timestamp: 'output.timestamp',
             },
             script: `
               const { amount, currency, initiator, approver } = context;
@@ -97,8 +105,8 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
                 requiresApproval,
                 timestamp: new Date().toISOString()
               };
-            `
-          }
+            `,
+          },
         },
         {
           id: 'check-approval-requirement',
@@ -107,18 +115,19 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
           dependencies: ['validate-request'],
           condition: {
             type: 'javascript',
-            expression: 'context["validate-request"].output.requiresApproval'
+            expression: 'context["validate-request"].output.requiresApproval',
           },
           config: {
             type: 'script',
             handler: 'javascript',
             inputMapping: {
-              requiresApproval: 'context["validate-request"].output.requiresApproval'
+              requiresApproval:
+                'context["validate-request"].output.requiresApproval',
             },
             outputMapping: {
-              result: 'output.result'
-            }
-          }
+              result: 'output.result',
+            },
+          },
         },
         {
           id: 'auto-approve',
@@ -131,13 +140,13 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
             inputMapping: {
               amount: 'input.amount',
               currency: 'input.currency',
-              initiator: 'input.initiator'
+              initiator: 'input.initiator',
             },
             outputMapping: {
               approved: 'output.approved',
               status: 'output.status',
               approvalDate: 'output.approvalDate',
-              comments: 'output.comments'
+              comments: 'output.comments',
             },
             script: `
               const { amount, currency, initiator } = context;
@@ -148,8 +157,8 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
                 approvalDate: new Date().toISOString(),
                 comments: 'Auto-approved: Amount below threshold'
               };
-            `
-          }
+            `,
+          },
         },
         {
           id: 'manual-approval',
@@ -162,13 +171,13 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
             inputMapping: {
               amount: 'input.amount',
               currency: 'input.currency',
-              approver: 'input.approver'
+              approver: 'input.approver',
             },
             outputMapping: {
               approved: 'output.approved',
               status: 'output.status',
               approvalDate: 'output.approvalDate',
-              comments: 'output.comments'
+              comments: 'output.comments',
             },
             script: `
               const { amount, currency, approver } = context;
@@ -182,10 +191,10 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
                   ? 'Approved by ' + approver 
                   : 'Rejected: Amount exceeds auto-approval limit'
               };
-            `
-          }
-        }
-      ]
+            `,
+          },
+        },
+      ],
     };
 
     // Create workflow definition
@@ -205,8 +214,8 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
         beneficiary: 'John Doe',
         accountNumber: '1234567890',
         initiator: 'maker1',
-        approver: 'checker1'
-      }
+        approver: 'checker1',
+      },
     };
 
     const smallPaymentResponse = await request(app.getHttpServer())
@@ -228,9 +237,9 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
 
       status = statusResponse.body.status;
       finalResponse = statusResponse;
-      
+
       if (status === WorkflowStatus.RUNNING) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }
     }
@@ -238,14 +247,18 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
     // Verify small payment workflow
     expect(status).toBe(WorkflowStatus.COMPLETED);
     const smallPaymentInstance = finalResponse.body;
-    
+
     // Verify validation step
-    const validationStep = smallPaymentInstance.state.completedSteps.find(s => s.stepId === 'validate-request');
+    const validationStep = smallPaymentInstance.state.completedSteps.find(
+      (s) => s.stepId === 'validate-request',
+    );
     expect(validationStep.output.isValid).toBe(true);
     expect(validationStep.output.requiresApproval).toBe(false);
-    
+
     // Verify auto-approval
-    const autoApproveStep = smallPaymentInstance.state.completedSteps.find(s => s.stepId === 'auto-approve');
+    const autoApproveStep = smallPaymentInstance.state.completedSteps.find(
+      (s) => s.stepId === 'auto-approve',
+    );
     expect(autoApproveStep.output.approved).toBe(true);
     expect(autoApproveStep.output.status).toBe('APPROVED');
 
@@ -258,8 +271,8 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
         beneficiary: 'Jane Smith',
         accountNumber: '0987654321',
         initiator: 'maker2',
-        approver: 'checker2'
-      }
+        approver: 'checker2',
+      },
     };
 
     const largePaymentResponse = await request(app.getHttpServer())
@@ -280,26 +293,30 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
 
       status = statusResponse.body.status;
       largePaymentFinalResponse = statusResponse;
-      
+
       if (status === WorkflowStatus.RUNNING) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }
     }
 
     // Verify large payment workflow
     const largePaymentInstance = largePaymentFinalResponse.body;
-    
+
     // Verify validation step
-    const largeValidationStep = largePaymentInstance.state.completedSteps.find(s => s.stepId === 'validate-request');
+    const largeValidationStep = largePaymentInstance.state.completedSteps.find(
+      (s) => s.stepId === 'validate-request',
+    );
     expect(largeValidationStep.output.isValid).toBe(true);
     expect(largeValidationStep.output.requiresApproval).toBe(true);
-    
+
     // Verify checker approval
-    const checkerStep = largePaymentInstance.state.completedSteps.find(s => s.stepId === 'manual-approval');
+    const checkerStep = largePaymentInstance.state.completedSteps.find(
+      (s) => s.stepId === 'manual-approval',
+    );
     expect(checkerStep.output.approved).toBe(true);
     expect(checkerStep.output.status).toBe('APPROVED');
-    
+
     // 4. Test case 3: Invalid request (same initiator and approver)
     const invalidInput = {
       input: {
@@ -309,8 +326,8 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
         beneficiary: 'Invalid Test',
         accountNumber: '1122334455',
         initiator: 'user1',
-        approver: 'user1' // Same as initiator
-      }
+        approver: 'user1', // Same as initiator
+      },
     };
 
     const invalidResponse = await request(app.getHttpServer())
@@ -331,19 +348,23 @@ describe('Maker-Checker Workflow Execution (e2e)', () => {
 
       status = statusResponse.body.status;
       invalidFinalResponse = statusResponse;
-      
+
       if (status === WorkflowStatus.RUNNING) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }
     }
 
     // Verify invalid request workflow
     const invalidInstance = invalidFinalResponse.body;
-    
+
     // Verify validation failure
-    const invalidValidationStep = invalidInstance.state.completedSteps.find(s => s.stepId === 'validate-request');
+    const invalidValidationStep = invalidInstance.state.completedSteps.find(
+      (s) => s.stepId === 'validate-request',
+    );
     expect(invalidValidationStep.output.isValid).toBe(false);
-    expect(invalidValidationStep.output.validationErrors).toContain('Initiator and approver cannot be the same person');
+    expect(invalidValidationStep.output.validationErrors).toContain(
+      'Initiator and approver cannot be the same person',
+    );
   });
 });

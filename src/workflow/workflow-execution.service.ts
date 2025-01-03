@@ -31,7 +31,7 @@ export class WorkflowExecutionService {
     @InjectRepository(WorkflowInstance)
     private workflowInstanceRepo: Repository<WorkflowInstance>,
     private workflowService: WorkflowService,
-  ) { }
+  ) {}
 
   async startWorkflow(
     workflowDefinitionId: string,
@@ -416,7 +416,8 @@ export class WorkflowExecutionService {
     instance: WorkflowInstance,
   ): Record<string, any> {
     // Find the last step that generates output
-    const lastStep = instance.state.completedSteps[instance.state.completedSteps.length - 1];
+    const lastStep =
+      instance.state.completedSteps[instance.state.completedSteps.length - 1];
     if (lastStep && lastStep.output) {
       return lastStep.output;
     }

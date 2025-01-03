@@ -7,7 +7,7 @@ module.exports = async () => {
     port: 5432,
     user: 'postgres',
     password: 'postgres',
-    database: 'postgres' // Connect to default database first
+    database: 'postgres', // Connect to default database first
   });
 
   try {
@@ -22,7 +22,6 @@ module.exports = async () => {
     await client.query(`
       CREATE DATABASE workflow_engine_test;
     `);
-
   } catch (error) {
     console.error('Error setting up test database:', error);
   } finally {

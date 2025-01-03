@@ -3,6 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -22,12 +23,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  // Register Handlebars helpers
-  const hbs = require('hbs');
-  hbs.registerHelper('formatDate', function (date) {
-    return new Date(date).toLocaleString();
-  });
-
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 3000);
+  Logger.log(
+    `Server running on http://localhost:${process.env.PORT ?? 3000}`,
+    'Bootstrap',
+  );
+  Logger.log('Swagger running on http://localhost:3000/api', 'Bootstrap');
 }
 bootstrap();

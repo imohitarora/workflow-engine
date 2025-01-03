@@ -29,14 +29,14 @@ describe('Workflow Execution (e2e)', () => {
       inputSchema: {
         type: 'object',
         properties: {
-          initialValue: { type: 'number' }
-        }
+          initialValue: { type: 'number' },
+        },
       },
       outputSchema: {
         type: 'object',
         properties: {
-          finalValue: { type: 'number' }
-        }
+          finalValue: { type: 'number' },
+        },
       },
       steps: [
         {
@@ -46,8 +46,8 @@ describe('Workflow Execution (e2e)', () => {
           dependencies: [],
           config: {
             type: 'script',
-            script: 'return { value: context.initialValue * 2 };'
-          }
+            script: 'return { value: context.initialValue * 2 };',
+          },
         },
         {
           id: 'step2',
@@ -56,8 +56,8 @@ describe('Workflow Execution (e2e)', () => {
           dependencies: ['step1'],
           condition: {
             type: 'javascript',
-            expression: 'context.step1.output.value > 5'
-          }
+            expression: 'context.step1.output.value > 5',
+          },
         },
         {
           id: 'step3',
@@ -72,8 +72,8 @@ describe('Workflow Execution (e2e)', () => {
                 type: 'TASK',
                 config: {
                   type: 'script',
-                  script: 'return { value: context.step1.output.value + 10 };'
-                }
+                  script: 'return { value: context.step1.output.value + 10 };',
+                },
               },
               {
                 id: 'parallel2',
@@ -81,13 +81,13 @@ describe('Workflow Execution (e2e)', () => {
                 type: 'TASK',
                 config: {
                   type: 'script',
-                  script: 'return { value: context.step1.output.value * 3 };'
-                }
-              }
+                  script: 'return { value: context.step1.output.value * 3 };',
+                },
+              },
             ],
             timeoutMs: 5000,
-            failFast: true
-          }
+            failFast: true,
+          },
         },
         {
           id: 'step4',
@@ -100,10 +100,10 @@ describe('Workflow Execution (e2e)', () => {
               const parallel1Value = context.step3.output.results.find(r => r.taskId === 'parallel1').output.value;
               const parallel2Value = context.step3.output.results.find(r => r.taskId === 'parallel2').output.value;
               return { finalValue: parallel1Value + parallel2Value };
-            `
-          }
-        }
-      ]
+            `,
+          },
+        },
+      ],
     };
 
     // Create workflow definition
@@ -119,8 +119,8 @@ describe('Workflow Execution (e2e)', () => {
       .post(`/workflows/${workflowId}/execute`)
       .send({
         input: {
-          initialValue: 5
-        }
+          initialValue: 5,
+        },
       })
       .expect(201);
 
@@ -139,31 +139,31 @@ describe('Workflow Execution (e2e)', () => {
 
       status = statusResponse.body.status;
       finalResponse = statusResponse;
-      
+
       if (status === WorkflowStatus.RUNNING) {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between polls
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second between polls
         attempts++;
       }
     }
 
     // 4. Verify workflow execution
     expect(status).toBe(WorkflowStatus.COMPLETED);
-    
+
     const workflowInstance = finalResponse.body;
-    
+
     // Verify step execution order
     const completedSteps = workflowInstance.state.completedSteps;
     expect(completedSteps).toHaveLength(4);
-    
+
     // Verify step1 output
-    const step1 = completedSteps.find(s => s.stepId === 'step1');
+    const step1 = completedSteps.find((s) => s.stepId === 'step1');
     expect(step1.output.value).toBe(10); // initialValue(5) * 2
-    
+
     // Verify parallel execution results
-    const step3 = completedSteps.find(s => s.stepId === 'step3');
+    const step3 = completedSteps.find((s) => s.stepId === 'step3');
     expect(step3.output.results).toHaveLength(2);
     expect(step3.output.successCount).toBe(2);
-    
+
     // Verify final output
     expect(workflowInstance.output.finalValue).toBe(50); // (10 + 20) + (10 * 3) = 30 + 20 = 50
   });

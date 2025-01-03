@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WorkflowDefinition } from './entities/workflow-definition.entity';
-import { WorkflowInstance, WorkflowStatus, StepStatus } from './entities/workflow-instance.entity';
 import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dto';
 import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
-import { Type } from '@nestjs/common/interfaces/type.interface';
-import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
+import { WorkflowDefinition } from './entities/workflow-definition.entity';
+import {
+  StepStatus,
+  WorkflowInstance,
+  WorkflowStatus,
+} from './entities/workflow-instance.entity';
 
 @Injectable()
 export class WorkflowService {
@@ -17,20 +19,22 @@ export class WorkflowService {
     private workflowInstanceRepo: Repository<WorkflowInstance>,
   ) {}
 
-  async create(createDto: CreateWorkflowDefinitionDto): Promise<WorkflowDefinition> {
+  async create(
+    createDto: CreateWorkflowDefinitionDto,
+  ): Promise<WorkflowDefinition> {
     // Convert DTO to entity
     const workflow = this.workflowDefinitionRepo.create({
       name: createDto.name,
       description: createDto.description,
-      steps: createDto.steps.map(step => ({
+      steps: createDto.steps.map((step) => ({
         ...step,
         config: {
           ...step.config,
-          type: step.config.type as 'human' | 'script' | 'http'
-        }
+          type: step.config.type as 'human' | 'script' | 'http',
+        },
       })),
       inputSchema: createDto.inputSchema,
-      outputSchema: createDto.outputSchema
+      outputSchema: createDto.outputSchema,
     });
 
     // Save and return the created workflow
@@ -111,14 +115,19 @@ export class WorkflowService {
     }
 
     // Find the step and update its status
-    const step = instance.state.currentSteps?.find(s => s.stepId === stepId);
+    const step = instance.state.currentSteps?.find((s) => s.stepId === stepId);
     if (step) {
       step.output = { approved: true, status: StepStatus.COMPLETED };
-      instance.state.completedSteps = [...(instance.state.completedSteps || []), step];
-      instance.state.currentSteps = instance.state.currentSteps.filter(s => s.stepId !== stepId);
-      
+      instance.state.completedSteps = [
+        ...(instance.state.completedSteps || []),
+        step,
+      ];
+      instance.state.currentSteps = instance.state.currentSteps.filter(
+        (s) => s.stepId !== stepId,
+      );
+
       await this.workflowInstanceRepo.save(instance);
-      
+
       // Continue workflow execution if there are more steps
       if (instance.state.currentSteps.length === 0) {
         instance.status = WorkflowStatus.COMPLETED;
@@ -138,13 +147,18 @@ export class WorkflowService {
     }
 
     // Find the step and update its status
-    const step = instance.state.currentSteps?.find(s => s.stepId === stepId);
+    const step = instance.state.currentSteps?.find((s) => s.stepId === stepId);
     if (step) {
       step.output = { approved: false, status: StepStatus.FAILED };
-      instance.state.completedSteps = [...(instance.state.completedSteps || []), step];
-      instance.state.currentSteps = instance.state.currentSteps.filter(s => s.stepId !== stepId);
+      instance.state.completedSteps = [
+        ...(instance.state.completedSteps || []),
+        step,
+      ];
+      instance.state.currentSteps = instance.state.currentSteps.filter(
+        (s) => s.stepId !== stepId,
+      );
       instance.status = WorkflowStatus.FAILED;
-      
+
       await this.workflowInstanceRepo.save(instance);
     }
   }
@@ -153,14 +167,20 @@ export class WorkflowService {
     createDto: CreateWorkflowDefinitionDto,
   ): Promise<boolean> {
     // Basic validation
-    if (!createDto.steps || !Array.isArray(createDto.steps) || createDto.steps.length === 0) {
+    if (
+      !createDto.steps ||
+      !Array.isArray(createDto.steps) ||
+      createDto.steps.length === 0
+    ) {
       throw new Error('Workflow must have at least one step');
     }
 
     // Validate each step
     for (const step of createDto.steps) {
       if (!step.id || !step.name || !step.type) {
-        throw new Error(`Step ${step.name || 'unknown'} is missing required fields`);
+        throw new Error(
+          `Step ${step.name || 'unknown'} is missing required fields`,
+        );
       }
 
       if (!step.config) {
@@ -175,9 +195,11 @@ export class WorkflowService {
       // Validate dependencies exist
       if (step.dependencies) {
         for (const depId of step.dependencies) {
-          const dependencyExists = createDto.steps.some(s => s.id === depId);
+          const dependencyExists = createDto.steps.some((s) => s.id === depId);
           if (!dependencyExists) {
-            throw new Error(`Step ${step.name} has invalid dependency: ${depId}`);
+            throw new Error(
+              `Step ${step.name} has invalid dependency: ${depId}`,
+            );
           }
         }
       }

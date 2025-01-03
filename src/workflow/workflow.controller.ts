@@ -31,7 +31,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) { }
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow definition' })
@@ -382,7 +382,10 @@ export class WorkflowController {
     @Param('id') id: string,
     @Body() startWorkflowDto: StartWorkflowDto,
   ): Promise<WorkflowInstance> {
-    return this.workflowExecutionService.startWorkflow(id, startWorkflowDto.input);
+    return this.workflowExecutionService.startWorkflow(
+      id,
+      startWorkflowDto.input,
+    );
   }
 
   @Get('instances/:id')
@@ -392,7 +395,9 @@ export class WorkflowController {
     description: 'Returns the workflow instance details',
     type: WorkflowInstance,
   })
-  async getWorkflowInstance(@Param('id') id: string): Promise<WorkflowInstance> {
+  async getWorkflowInstance(
+    @Param('id') id: string,
+  ): Promise<WorkflowInstance> {
     const instance = await this.workflowService.findInstanceById(id);
     if (!instance) {
       throw new NotFoundException(`Workflow instance ${id} not found`);
