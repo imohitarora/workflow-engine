@@ -1,4 +1,4 @@
-import { IsString, IsObject } from 'class-validator';
+import { IsString, IsObject, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class StartWorkflowDto {
@@ -7,7 +7,16 @@ export class StartWorkflowDto {
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsString()
+  @IsNotEmpty()
   workflowDefinitionId: string;
+
+  @ApiProperty({
+    description: 'Business identifier for the workflow instance',
+    example: 'LOAN-2025-001',
+  })
+  @IsString()
+  @IsNotEmpty()
+  businessId: string;
 
   @ApiProperty({
     description: 'Input data for the workflow',

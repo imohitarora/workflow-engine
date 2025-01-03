@@ -31,7 +31,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow definition' })
@@ -168,78 +168,225 @@ export class WorkflowController {
             {
               id: 'validate-application',
               name: 'Validate Loan Application',
-              type: 'TASK',
+              type: 'human',
               dependencies: [],
               config: {
-                handler: 'loanValidator',
+                type: 'human',
+                handler: 'validateLoanApplication',
                 inputMapping: {
                   applicantName: '$.input.applicantName',
                   income: '$.input.income',
                   loanAmount: '$.input.loanAmount',
                   loanTerm: '$.input.loanTerm',
+                  ssn: '$.input.ssn'
                 },
                 outputMapping: {
                   isValid: '$.output.isValid',
                   validationErrors: '$.output.errors',
+                  notes: '$.output.notes'
                 },
+                form: {
+                  title: 'Validate Loan Application',
+                  fields: [
+                    {
+                      name: 'isValid',
+                      label: 'Application Valid?',
+                      type: 'boolean',
+                      required: true
+                    },
+                    {
+                      name: 'errors',
+                      label: 'Validation Errors',
+                      type: 'array',
+                      items: { type: 'string' },
+                      showIf: 'isValid === false'
+                    },
+                    {
+                      name: 'notes',
+                      label: 'Additional Notes',
+                      type: 'text',
+                      multiline: true
+                    }
+                  ]
+                }
               },
+              timeout: 172800000, // 48 hours for human task
             },
             {
               id: 'check-credit',
               name: 'Credit Score Check',
-              type: 'TASK',
+              type: 'human',
               dependencies: ['validate-application'],
               config: {
-                handler: 'creditChecker',
+                type: 'human',
+                handler: 'performCreditCheck',
                 inputMapping: {
                   applicantName: '$.input.applicantName',
-                  ssn: '$.input.ssn',
+                  ssn: '$.input.ssn'
                 },
                 outputMapping: {
                   creditScore: '$.output.score',
                   creditReport: '$.output.report',
+                  manualCheckNotes: '$.output.notes'
                 },
+                form: {
+                  title: 'Credit Score Check',
+                  fields: [
+                    {
+                      name: 'score',
+                      label: 'Credit Score',
+                      type: 'number',
+                      required: true,
+                      min: 300,
+                      max: 850
+                    },
+                    {
+                      name: 'report',
+                      label: 'Credit Report Details',
+                      type: 'object',
+                      properties: {
+                        delinquencies: { type: 'number' },
+                        creditUtilization: { type: 'number' },
+                        lengthOfHistory: { type: 'number' }
+                      }
+                    },
+                    {
+                      name: 'notes',
+                      label: 'Manual Check Notes',
+                      type: 'text',
+                      multiline: true
+                    }
+                  ]
+                }
               },
+              timeout: 172800000, // 48 hours for human task
+              condition: {
+                type: 'javascript',
+                expression: 'steps["validate-application"].output.isValid === true'
+              }
             },
             {
               id: 'assess-risk',
               name: 'Risk Assessment',
-              type: 'TASK',
+              type: 'human',
               dependencies: ['check-credit'],
               config: {
-                handler: 'riskAssessor',
+                type: 'human',
+                handler: 'assessRisk',
                 inputMapping: {
                   creditScore: '$.steps.check-credit.output.creditScore',
+                  creditReport: '$.steps.check-credit.output.creditReport',
                   income: '$.input.income',
                   loanAmount: '$.input.loanAmount',
-                  loanTerm: '$.input.loanTerm',
+                  loanTerm: '$.input.loanTerm'
                 },
                 outputMapping: {
                   riskLevel: '$.output.riskLevel',
                   recommendedRate: '$.output.recommendedRate',
+                  assessmentNotes: '$.output.notes'
                 },
+                form: {
+                  title: 'Risk Assessment',
+                  fields: [
+                    {
+                      name: 'riskLevel',
+                      label: 'Risk Level',
+                      type: 'select',
+                      required: true,
+                      options: [
+                        { value: 'LOW', label: 'Low Risk' },
+                        { value: 'MEDIUM', label: 'Medium Risk' },
+                        { value: 'HIGH', label: 'High Risk' }
+                      ]
+                    },
+                    {
+                      name: 'recommendedRate',
+                      label: 'Recommended Interest Rate (%)',
+                      type: 'number',
+                      required: true,
+                      min: 0,
+                      max: 30,
+                      step: 0.25
+                    },
+                    {
+                      name: 'notes',
+                      label: 'Assessment Notes',
+                      type: 'text',
+                      multiline: true
+                    }
+                  ]
+                }
               },
+              timeout: 172800000 // 48 hours for human task
             },
             {
               id: 'make-decision',
               name: 'Loan Decision',
-              type: 'TASK',
+              type: 'human',
               dependencies: ['assess-risk'],
               config: {
-                handler: 'loanDecision',
+                type: 'human',
+                handler: 'makeLoanDecision',
                 inputMapping: {
                   riskLevel: '$.steps.assess-risk.output.riskLevel',
                   recommendedRate: '$.steps.assess-risk.output.recommendedRate',
                   creditScore: '$.steps.check-credit.output.creditScore',
+                  creditReport: '$.steps.check-credit.output.creditReport',
+                  income: '$.input.income',
+                  loanAmount: '$.input.loanAmount',
+                  loanTerm: '$.input.loanTerm'
                 },
                 outputMapping: {
                   approved: '$.output.approved',
                   loanId: '$.output.loanId',
                   interestRate: '$.output.interestRate',
                   reason: '$.output.reason',
+                  decisionNotes: '$.output.notes'
                 },
+                form: {
+                  title: 'Final Loan Decision',
+                  fields: [
+                    {
+                      name: 'approved',
+                      label: 'Approve Loan?',
+                      type: 'boolean',
+                      required: true
+                    },
+                    {
+                      name: 'loanId',
+                      label: 'Loan ID',
+                      type: 'string',
+                      required: true,
+                      pattern: '^LOAN-\\d{4}-\\d{4}$',
+                      patternError: 'Must be in format LOAN-YYYY-NNNN'
+                    },
+                    {
+                      name: 'interestRate',
+                      label: 'Final Interest Rate (%)',
+                      type: 'number',
+                      required: true,
+                      min: 0,
+                      max: 30,
+                      step: 0.25
+                    },
+                    {
+                      name: 'reason',
+                      label: 'Decision Reason',
+                      type: 'text',
+                      required: true,
+                      multiline: true
+                    },
+                    {
+                      name: 'notes',
+                      label: 'Additional Notes',
+                      type: 'text',
+                      multiline: true
+                    }
+                  ]
+                }
               },
-            },
+              timeout: 172800000 // 48 hours for human task
+            }
           ],
           inputSchema: {
             type: 'object',
@@ -248,15 +395,15 @@ export class WorkflowController {
               ssn: { type: 'string' },
               income: { type: 'number' },
               loanAmount: { type: 'number' },
-              loanTerm: { type: 'number' },
+              loanTerm: { type: 'number' }
             },
             required: [
               'applicantName',
               'ssn',
               'income',
               'loanAmount',
-              'loanTerm',
-            ],
+              'loanTerm'
+            ]
           },
           outputSchema: {
             type: 'object',
@@ -264,11 +411,12 @@ export class WorkflowController {
               approved: { type: 'boolean' },
               loanId: { type: 'string' },
               interestRate: { type: 'number' },
-              reason: { type: 'string' },
+              reason: { type: 'string' }
             },
-          },
-        },
-      },
+            required: ['approved', 'loanId', 'interestRate', 'reason']
+          }
+        }
+      }
     },
   })
   create(@Body() createWorkflowDto: CreateWorkflowDefinitionDto) {
@@ -372,10 +520,10 @@ export class WorkflowController {
   }
 
   @Post(':id/execute')
-  @ApiOperation({ summary: 'Execute a workflow' })
+  @ApiOperation({ summary: 'Execute a workflow definition' })
   @ApiResponse({
     status: 201,
-    description: 'The workflow has been started successfully.',
+    description: 'The workflow instance has been created successfully.',
     type: WorkflowInstance,
   })
   async executeWorkflow(
@@ -384,6 +532,7 @@ export class WorkflowController {
   ): Promise<WorkflowInstance> {
     return this.workflowExecutionService.startWorkflow(
       id,
+      startWorkflowDto.businessId,
       startWorkflowDto.input,
     );
   }
@@ -405,50 +554,19 @@ export class WorkflowController {
     return instance;
   }
 
-  @Post('execute')
-  @ApiOperation({ summary: 'Start a new workflow execution' })
+  @Post('start')
+  @ApiOperation({ summary: 'Start a new workflow instance' })
   @ApiResponse({
     status: 201,
-    description: 'The workflow execution has started',
+    description: 'The workflow instance has been created successfully.',
     type: WorkflowInstance,
   })
-  @ApiResponse({
-    status: 404,
-    description: 'Workflow definition not found',
-  })
-  @ApiBody({
-    description: 'Start workflow execution payload',
-    examples: {
-      emailWorkflow: {
-        summary: 'Start email notification workflow',
-        value: {
-          workflowDefinitionId: '123e4567-e89b-12d3-a456-426614174000',
-          input: {
-            email: 'user@example.com',
-            subject: 'Welcome to our platform',
-            body: 'Thank you for joining us!',
-          },
-        },
-      },
-      orderWorkflow: {
-        summary: 'Start order processing workflow',
-        value: {
-          workflowDefinitionId: '123e4567-e89b-12d3-a456-426614174001',
-          input: {
-            orderId: 'ORD-12345',
-            items: [
-              { id: 'ITEM-1', quantity: 2 },
-              { id: 'ITEM-2', quantity: 1 },
-            ],
-            paymentMethod: 'credit_card',
-          },
-        },
-      },
-    },
-  })
-  startWorkflow(@Body() startWorkflowDto: StartWorkflowDto) {
+  async startWorkflow(
+    @Body() startWorkflowDto: StartWorkflowDto,
+  ): Promise<WorkflowInstance> {
     return this.workflowExecutionService.startWorkflow(
       startWorkflowDto.workflowDefinitionId,
+      startWorkflowDto.businessId,
       startWorkflowDto.input,
     );
   }

@@ -1,14 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  WorkflowInstance,
-  WorkflowStatus,
-  StepStatus,
-  StepState,
-} from './entities/workflow-instance.entity';
+import { WorkflowInstance } from './entities/workflow-instance.entity';
+import { WorkflowStatus } from './enums/workflow-status.enum';
+import { StepStatus } from './enums/step-status.enum';
 import { WorkflowService } from './workflow.service';
 import { StepType, WorkflowStep } from './entities/workflow-definition.entity';
+import { StepState, CompletedStep } from './interfaces/step-state.interface';
 
 enum TaskType {
   HTTP = 'http',
@@ -33,8 +31,65 @@ export class WorkflowExecutionService {
     private workflowService: WorkflowService,
   ) {}
 
+  private validateWorkflowInput(schema: Record<string, any>, input: Record<string, any>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    // Check required fields
+    if (schema.required) {
+      for (const requiredField of schema.required) {
+        if (!(requiredField in input)) {
+          errors.push(`Missing required field: ${requiredField}`);
+        }
+      }
+    }
+
+    // Validate property types
+    if (schema.properties) {
+      for (const [field, fieldSchema] of Object.entries(schema.properties)) {
+        if (field in input) {
+          const value = input[field];
+          const type = (fieldSchema as any).type;
+
+          switch (type) {
+            case 'string':
+              if (typeof value !== 'string') {
+                errors.push(`Field ${field} must be a string`);
+              }
+              break;
+            case 'number':
+              if (typeof value !== 'number') {
+                errors.push(`Field ${field} must be a number`);
+              }
+              break;
+            case 'boolean':
+              if (typeof value !== 'boolean') {
+                errors.push(`Field ${field} must be a boolean`);
+              }
+              break;
+            case 'array':
+              if (!Array.isArray(value)) {
+                errors.push(`Field ${field} must be an array`);
+              }
+              break;
+            case 'object':
+              if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+                errors.push(`Field ${field} must be an object`);
+              }
+              break;
+          }
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
   async startWorkflow(
     workflowDefinitionId: string,
+    businessId: string,
     input: Record<string, any>,
   ): Promise<WorkflowInstance> {
     const definition = await this.workflowService.findOne(workflowDefinitionId);
@@ -43,9 +98,23 @@ export class WorkflowExecutionService {
       throw new Error(`Workflow definition ${workflowDefinitionId} not found`);
     }
 
+    // Validate input against the workflow's input schema
+    const validation = this.validateWorkflowInput(definition.inputSchema, input);
+    if (!validation.isValid) {
+      throw new BadRequestException({
+        message: 'Invalid workflow input',
+        errors: validation.errors,
+      });
+    }
+
+    if (!businessId) {
+      throw new BadRequestException('businessId is required');
+    }
+
     const instance = this.workflowInstanceRepo.create({
       workflowDefinitionId,
-      workflowDefinition: definition, // Add this line to associate the definition
+      workflowDefinition: definition,
+      businessId,
       input,
       state: {
         currentSteps: [],
@@ -116,48 +185,52 @@ export class WorkflowExecutionService {
     for (const step of steps) {
       try {
         // Add step to current steps
-        instance.state.currentSteps.push(this.createStepState(step));
-
+        const stepState = this.createStepState(step);
+        instance.state.currentSteps.push(stepState);
         await this.workflowInstanceRepo.save(instance);
 
-        // Execute step based on type
-        let result: TaskResult;
-        switch (step.type) {
-          case StepType.TASK:
-            result = await this.executeTask(instance, step);
-            break;
-          case StepType.DECISION:
-            result = await this.executeDecision(instance, step);
-            break;
-          case StepType.PARALLEL:
-            result = await this.executeParallel(instance, step);
-            break;
-          default:
-            throw new Error(`Unsupported step type: ${step.type}`);
+        // For human tasks, we just mark them as pending and continue
+        if (step.config?.type === 'human') {
+          this.logger.log(`Human task ${step.id} waiting for user action`);
+          continue;
         }
 
-        // Update step status to completed
-        const stepState = instance.state.currentSteps.find(
-          (s) => s.stepId === step.id,
-        );
-        stepState.status = StepStatus.COMPLETED;
-        stepState.endTime = new Date();
-        stepState.output = result.output;
+        // Execute automated steps
+        let result: TaskResult;
+        if (step.type === StepType.TASK) {
+          switch (step.config?.type) {
+            case 'script':
+              result = await this.executeScriptTask(step.config, instance.state.variables);
+              break;
+            case 'http':
+              result = await this.executeHttpTask(step.config);
+              break;
+            default:
+              throw new Error(`Unsupported task type: ${step.config?.type}`);
+          }
+        } else {
+          throw new Error(`Unsupported step type: ${step.type}`);
+        }
 
-        // Move step from current to completed
-        instance.state.completedSteps.push(stepState);
-        instance.state.currentSteps = instance.state.currentSteps.filter(
-          (s) => s.stepId !== step.id,
-        );
+        if (result.success) {
+          // Update step status and move to completed
+          const currentStep = instance.state.currentSteps.find(s => s.stepId === step.id);
+          if (currentStep) {
+            currentStep.status = StepStatus.COMPLETED;
+            currentStep.output = result.output;
+            currentStep.endTime = new Date();
 
-        // Update instance state variables with step output
-        instance.state.variables = {
-          ...instance.state.variables,
-          [step.id]: {
-            output: result.output,
-            status: StepStatus.COMPLETED,
-          },
-        };
+            // Move to completed steps
+            instance.state.completedSteps.push({
+              ...currentStep,
+              endTime: currentStep.endTime || new Date(),
+              output: currentStep.output || {},
+            });
+            instance.state.currentSteps = instance.state.currentSteps.filter(
+              s => s.stepId !== step.id
+            );
+          }
+        }
 
         await this.workflowInstanceRepo.save(instance);
 
@@ -167,24 +240,9 @@ export class WorkflowExecutionService {
           instance.completedAt = new Date();
           instance.output = this.generateWorkflowOutput(instance);
           await this.workflowInstanceRepo.save(instance);
-        } else {
-          // Continue with next ready steps
-          const nextSteps = this.findReadySteps(instance);
-          if (nextSteps.length > 0) {
-            await this.executeSteps(instance, nextSteps);
-          }
         }
       } catch (error) {
         this.logger.error(`Error executing step ${step.id}:`, error);
-
-        const stepState = instance.state.currentSteps.find(
-          (s) => s.stepId === step.id,
-        );
-        stepState.status = StepStatus.FAILED;
-        stepState.error = error.message;
-
-        instance.status = WorkflowStatus.FAILED;
-        await this.workflowInstanceRepo.save(instance);
         throw error;
       }
     }
@@ -201,45 +259,6 @@ export class WorkflowExecutionService {
       config: step.config,
       dependencies: step.dependencies,
     };
-  }
-
-  private async executeTask(
-    instance: WorkflowInstance,
-    step: any,
-  ): Promise<TaskResult> {
-    try {
-      this.logger.debug(`Executing task: ${step.name}`);
-
-      switch (step.config.type) {
-        case TaskType.HTTP:
-          return await this.executeHttpTask(step.config);
-
-        case TaskType.SCRIPT:
-          return await this.executeScriptTask(
-            step.config,
-            instance.state.variables,
-          );
-
-        case TaskType.CONDITION:
-          return await this.evaluateCondition(
-            step.config,
-            instance.state.variables,
-          );
-
-        case TaskType.DELAY:
-          return await this.executeDelay(step.config);
-
-        default:
-          throw new Error(`Unsupported task type: ${step.config.type}`);
-      }
-    } catch (error) {
-      this.logger.error(`Task execution failed: ${error.message}`);
-      return {
-        success: false,
-        output: null,
-        error: error.message,
-      };
-    }
   }
 
   private async executeHttpTask(config: any): Promise<TaskResult> {
@@ -289,121 +308,6 @@ export class WorkflowExecutionService {
       };
     } catch (error) {
       throw new Error(`Script execution failed: ${error.message}`);
-    }
-  }
-
-  private async evaluateCondition(
-    config: any,
-    variables: Record<string, any>,
-  ): Promise<TaskResult> {
-    const { condition } = config;
-    try {
-      const result = new Function(
-        'variables',
-        `
-        with (variables) {
-          return ${condition};
-        }
-      `,
-      )(variables);
-
-      return {
-        success: true,
-        output: !!result,
-      };
-    } catch (error) {
-      throw new Error(`Condition evaluation failed: ${error.message}`);
-    }
-  }
-
-  private async executeDelay(config: any): Promise<TaskResult> {
-    const { duration } = config;
-    await new Promise((resolve) => setTimeout(resolve, duration));
-    return {
-      success: true,
-      output: null,
-    };
-  }
-
-  private async executeDecision(
-    instance: WorkflowInstance,
-    step: any,
-  ): Promise<any> {
-    if (step.condition.type === 'javascript') {
-      // Evaluate JavaScript expression
-      const result = new Function(
-        'context',
-        `return ${step.condition.expression}`,
-      )(instance.state.variables);
-      return result;
-    } else if (step.condition.type === 'jsonpath') {
-      // Implement JSONPath evaluation
-      return null;
-    }
-    return null;
-  }
-
-  private async executeParallel(
-    instance: WorkflowInstance,
-    step: any,
-  ): Promise<TaskResult> {
-    const { tasks, timeoutMs = 30000, failFast = true } = step.config;
-
-    if (!Array.isArray(tasks) || tasks.length === 0) {
-      throw new Error('Parallel step requires an array of tasks');
-    }
-
-    try {
-      const taskPromises = tasks.map(async (task) => {
-        try {
-          const startTime = Date.now();
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Task timeout')), timeoutMs);
-          });
-
-          const result = (await Promise.race([
-            this.executeTask(instance, task),
-            timeoutPromise,
-          ])) as TaskResult;
-
-          return {
-            taskId: task.id,
-            duration: Date.now() - startTime,
-            success: result.success,
-            output: result.output,
-            error: result.error,
-          };
-        } catch (error) {
-          if (failFast) {
-            throw error;
-          }
-          return {
-            taskId: task.id,
-            success: false,
-            error: error.message,
-          };
-        }
-      });
-
-      const results = await Promise.all(taskPromises);
-      const success = failFast
-        ? results.every((r) => r.success)
-        : results.some((r) => r.success);
-
-      return {
-        success,
-        output: {
-          results,
-          successCount: results.filter((r) => r.success).length,
-          failureCount: results.filter((r) => !r.success).length,
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        output: null,
-        error: `Parallel execution failed: ${error.message}`,
-      };
     }
   }
 

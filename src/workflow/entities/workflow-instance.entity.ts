@@ -1,25 +1,45 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
+  PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import {
-  WorkflowDefinition,
-  StepType,
-  StepConfig,
-} from './workflow-definition.entity';
+import { WorkflowDefinition } from './workflow-definition.entity';
+import { WorkflowStatus } from '../enums/workflow-status.enum';
+import { StepStatus } from '../enums/step-status.enum';
 
-export enum WorkflowStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  PAUSED = 'PAUSED',
-  CANCELLED = 'CANCELLED',
+interface StepBase {
+  stepId: string;
+  name: string;
+  type: string;
+  status: StepStatus;
+  startTime: Date;
+  error?: string;
+  dependencies: string[];
+  attempts: number;
+}
+
+interface CurrentStep extends StepBase {
+  endTime?: Date;
+  output?: any;
+  config?: {
+    type: string;
+    [key: string]: any;
+  };
+}
+
+interface CompletedStep extends StepBase {
+  endTime: Date;
+  output: any;
+}
+
+interface WorkflowState {
+  currentSteps: CurrentStep[];
+  completedSteps: CompletedStep[];
+  variables: Record<string, any>;
 }
 
 @Entity('workflow_instances')
@@ -28,11 +48,14 @@ export class WorkflowInstance {
   id: string;
 
   @Column()
-  workflowDefinitionId: string;
+  businessId: string;
 
   @ManyToOne(() => WorkflowDefinition)
   @JoinColumn({ name: 'workflowDefinitionId' })
   workflowDefinition: WorkflowDefinition;
+
+  @Column()
+  workflowDefinitionId: string;
 
   @Column('jsonb')
   input: Record<string, any>;
@@ -61,33 +84,4 @@ export class WorkflowInstance {
 
   @Column({ nullable: true })
   completedAt: Date;
-}
-
-export interface WorkflowState {
-  currentSteps: StepState[];
-  completedSteps: StepState[];
-  variables: Record<string, any>;
-}
-
-export interface StepState {
-  stepId: string;
-  status: StepStatus;
-  startTime: Date;
-  endTime?: Date;
-  attempts: number;
-  error?: string;
-  output?: any;
-  // Step definition fields
-  name: string;
-  type: StepType;
-  config: StepConfig;
-  dependencies: string[];
-}
-
-export enum StepStatus {
-  PENDING = 'PENDING',
-  RUNNING = 'RUNNING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  SKIPPED = 'SKIPPED',
 }

@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 
 export enum StepType {
@@ -19,12 +20,28 @@ export interface StepConfig {
   handler: string;
   inputMapping: Record<string, string>;
   outputMapping: Record<string, string>;
+  form?: {
+    title: string;
+    fields: Array<{
+      name: string;
+      label: string;
+      type: string;
+      required?: boolean;
+      multiline?: boolean;
+      min?: number;
+      max?: number;
+      step?: number;
+      pattern?: string;
+      patternError?: string;
+      showIf?: string;
+    }>;
+  };
 }
 
 export interface RetryConfig {
   maxAttempts: number;
-  backoffMultiplier: number;
-  initialDelay: number;
+  backoffFactor: number;
+  initialInterval: number;
 }
 
 export interface Condition {
@@ -43,7 +60,7 @@ export interface WorkflowStep {
   condition?: Condition;
 }
 
-@Entity('workflow_definitions')
+@Entity()
 export class WorkflowDefinition {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -51,17 +68,20 @@ export class WorkflowDefinition {
   @Column()
   name: string;
 
-  @Column({ nullable: true })
+  @Column()
   description: string;
 
   @Column('jsonb')
   steps: WorkflowStep[];
 
-  @Column('jsonb')
+  @Column('jsonb', { nullable: true })
   inputSchema: Record<string, any>;
 
-  @Column('jsonb')
+  @Column('jsonb', { nullable: true })
   outputSchema: Record<string, any>;
+
+  @VersionColumn()
+  version: number;
 
   @CreateDateColumn()
   createdAt: Date;

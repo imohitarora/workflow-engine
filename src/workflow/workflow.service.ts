@@ -1,14 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dto';
-import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
 import { WorkflowDefinition } from './entities/workflow-definition.entity';
-import {
-  StepStatus,
-  WorkflowInstance,
-  WorkflowStatus,
-} from './entities/workflow-instance.entity';
+import { WorkflowInstance } from './entities/workflow-instance.entity';
+import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dto';
+import { WorkflowStatus } from './enums/workflow-status.enum';
+import { StepStatus } from './enums/step-status.enum';
+import { WorkflowStep } from './interfaces/workflow-step.interface';
+import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
 
 @Injectable()
 export class WorkflowService {
@@ -117,10 +116,15 @@ export class WorkflowService {
     // Find the step and update its status
     const step = instance.state.currentSteps?.find((s) => s.stepId === stepId);
     if (step) {
-      step.output = { approved: true, status: StepStatus.COMPLETED };
+      const completedStep = {
+        ...step,
+        output: { approved: true, status: StepStatus.COMPLETED },
+        endTime: new Date("2025-01-03T12:36:14-05:00")  // Using the provided current time
+      };
+
       instance.state.completedSteps = [
         ...(instance.state.completedSteps || []),
-        step,
+        completedStep,
       ];
       instance.state.currentSteps = instance.state.currentSteps.filter(
         (s) => s.stepId !== stepId,
@@ -136,31 +140,125 @@ export class WorkflowService {
     }
   }
 
-  async rejectTask(taskId: string): Promise<void> {
+  async rejectTask(taskId: string, reason: string): Promise<void> {
     const [instanceId, stepId] = taskId.split('-');
     const instance = await this.workflowInstanceRepo.findOne({
       where: { id: instanceId },
     });
 
     if (!instance) {
-      throw new NotFoundException(`Workflow instance ${instanceId} not found`);
+      throw new NotFoundException(`Task ${taskId} not found`);
     }
 
-    // Find the step and update its status
-    const step = instance.state.currentSteps?.find((s) => s.stepId === stepId);
-    if (step) {
-      step.output = { approved: false, status: StepStatus.FAILED };
-      instance.state.completedSteps = [
-        ...(instance.state.completedSteps || []),
-        step,
-      ];
-      instance.state.currentSteps = instance.state.currentSteps.filter(
-        (s) => s.stepId !== stepId,
-      );
-      instance.status = WorkflowStatus.FAILED;
-
-      await this.workflowInstanceRepo.save(instance);
+    const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
+    if (stepIndex === -1) {
+      throw new NotFoundException(`Step ${stepId} not found in workflow ${instanceId}`);
     }
+
+    // Update step status and error
+    instance.state.currentSteps[stepIndex].status = StepStatus.FAILED;
+    instance.state.currentSteps[stepIndex].error = reason;
+    instance.state.currentSteps[stepIndex].endTime = new Date();
+
+    // Update workflow status
+    instance.status = WorkflowStatus.FAILED;
+
+    await this.workflowInstanceRepo.save(instance);
+  }
+
+  async getTaskDetails(taskId: string): Promise<any> {
+    const [instanceId, stepId] = taskId.split('-');
+    const instance = await this.workflowInstanceRepo.findOne({
+      where: { id: instanceId },
+      relations: ['workflowDefinition'],
+    });
+
+    if (!instance) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    const step = instance.state.currentSteps.find(s => s.stepId === stepId);
+    if (!step) {
+      throw new NotFoundException(`Step ${stepId} not found in workflow ${instanceId}`);
+    }
+
+    const workflowStep = instance.workflowDefinition.steps.find(s => s.id === stepId);
+    if (!workflowStep) {
+      throw new NotFoundException(`Step ${stepId} not found in workflow definition`);
+    }
+
+    return {
+      id: taskId,
+      businessId: instance.businessId,
+      workflowInstanceId: instanceId,
+      stepId,
+      type: step.type,
+      name: step.name,
+      status: step.status,
+      config: workflowStep.config,
+      inputData: this.resolveInputData(instance, workflowStep),
+    };
+  }
+
+  private resolveInputData(instance: WorkflowInstance, step: WorkflowStep): Record<string, any> {
+    const inputData: Record<string, any> = {};
+    const variables = {
+      input: instance.input,
+      steps: instance.state.completedSteps.reduce((acc: Record<string, any>, s) => {
+        acc[s.stepId] = { output: s.output };
+        return acc;
+      }, {}),
+    };
+
+    for (const [key, path] of Object.entries(step.config.inputMapping)) {
+      inputData[key] = this.resolveJsonPath(variables, path as string);
+    }
+
+    return inputData;
+  }
+
+  private resolveJsonPath(obj: any, path: string): any {
+    const parts = path.split('.');
+    let current = obj;
+
+    for (const part of parts) {
+      if (part.startsWith('$')) continue;
+      if (!current) return undefined;
+      current = current[part];
+    }
+
+    return current;
+  }
+
+  async completeTask(taskId: string, formData: Record<string, any>): Promise<void> {
+    const [instanceId, stepId] = taskId.split('-');
+    const instance = await this.workflowInstanceRepo.findOne({
+      where: { id: instanceId },
+      relations: ['workflowDefinition'],
+    });
+
+    if (!instance) {
+      throw new NotFoundException(`Task ${taskId} not found`);
+    }
+
+    const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
+    if (stepIndex === -1) {
+      throw new NotFoundException(`Step ${stepId} not found in workflow ${instanceId}`);
+    }
+
+    // Update step status and output
+    const completedStep = {
+      ...instance.state.currentSteps[stepIndex],
+      status: StepStatus.COMPLETED,
+      output: formData,
+      endTime: new Date(),
+    };
+
+    // Remove from current steps and add to completed steps
+    instance.state.currentSteps.splice(stepIndex, 1);
+    instance.state.completedSteps.push(completedStep);
+
+    await this.workflowInstanceRepo.save(instance);
   }
 
   async validateWorkflowDefinition(
