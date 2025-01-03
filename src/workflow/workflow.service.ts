@@ -1,13 +1,38 @@
+// NestJS imports
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+// Entities
 import { WorkflowDefinition } from './entities/workflow-definition.entity';
 import { WorkflowInstance } from './entities/workflow-instance.entity';
+
+// DTOs
 import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dto';
+import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
+
+// Enums and Interfaces
 import { WorkflowStatus } from './enums/workflow-status.enum';
 import { StepStatus } from './enums/step-status.enum';
 import { WorkflowStep } from './interfaces/workflow-step.interface';
-import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
+
+interface TaskDto {
+  id: string;
+  name: string;
+  status: StepStatus;
+  form: any;
+}
+
+interface CompletedStep {
+  stepId: string;
+  name: string;
+  type: string;
+  config: any;
+  status: StepStatus;
+  output: any;
+  endTime: Date;
+  error?: string;
+}
 
 @Injectable()
 export class WorkflowService {
@@ -77,49 +102,41 @@ export class WorkflowService {
     });
   }
 
-  async findPendingTasks(): Promise<any[]> {
-    const instances = await this.workflowInstanceRepo.find({
-      where: {
-        status: WorkflowStatus.RUNNING,
-      },
+  async findInstancesByStatus(status: WorkflowStatus): Promise<WorkflowInstance[]> {
+    return this.workflowInstanceRepo.find({
+      where: { status },
       relations: ['workflowDefinition'],
     });
-
-    const pendingTasks = [];
-    for (const instance of instances) {
-      const currentSteps = instance.state.currentSteps || [];
-      for (const step of currentSteps) {
-        if (step.type === 'TASK' && step.config?.type === 'human') {
-          pendingTasks.push({
-            id: `${instance.id}-${step.stepId}`,
-            type: step.name,
-            workflowInstanceId: instance.id,
-            stepId: step.stepId,
-            status: StepStatus.PENDING,
-          });
-        }
-      }
-    }
-    return pendingTasks;
   }
 
-  async approveTask(taskId: string): Promise<void> {
-    const [instanceId, stepId] = taskId.split('-');
+  async findInstances(): Promise<WorkflowInstance[]> {
+    return this.workflowInstanceRepo.find({
+      relations: ['workflowDefinition'],
+    });
+  }
+
+  async getInstance(instanceId: string): Promise<WorkflowInstance> {
     const instance = await this.workflowInstanceRepo.findOne({
       where: { id: instanceId },
+      relations: ['workflowDefinition'],
     });
 
     if (!instance) {
       throw new NotFoundException(`Workflow instance ${instanceId} not found`);
     }
 
-    // Find the step and update its status
+    return instance;
+  }
+
+  async approveInstanceStep(instanceId: string, stepId: string): Promise<void> {
+    const instance = await this.getInstance(instanceId);
+
     const step = instance.state.currentSteps?.find((s) => s.stepId === stepId);
     if (step) {
       const completedStep = {
         ...step,
         output: { approved: true, status: StepStatus.COMPLETED },
-        endTime: new Date("2025-01-03T12:36:14-05:00")  // Using the provided current time
+        endTime: new Date()
       };
 
       instance.state.completedSteps = [
@@ -140,15 +157,8 @@ export class WorkflowService {
     }
   }
 
-  async rejectTask(taskId: string, reason: string): Promise<void> {
-    const [instanceId, stepId] = taskId.split('-');
-    const instance = await this.workflowInstanceRepo.findOne({
-      where: { id: instanceId },
-    });
-
-    if (!instance) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
+  async rejectInstanceStep(instanceId: string, stepId: string, reason: string): Promise<void> {
+    const instance = await this.getInstance(instanceId);
 
     const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
     if (stepIndex === -1) {
@@ -166,80 +176,8 @@ export class WorkflowService {
     await this.workflowInstanceRepo.save(instance);
   }
 
-  async getTaskDetails(taskId: string): Promise<any> {
-    const [instanceId, stepId] = taskId.split('-');
-    const instance = await this.workflowInstanceRepo.findOne({
-      where: { id: instanceId },
-      relations: ['workflowDefinition'],
-    });
-
-    if (!instance) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    const step = instance.state.currentSteps.find(s => s.stepId === stepId);
-    if (!step) {
-      throw new NotFoundException(`Step ${stepId} not found in workflow ${instanceId}`);
-    }
-
-    const workflowStep = instance.workflowDefinition.steps.find(s => s.id === stepId);
-    if (!workflowStep) {
-      throw new NotFoundException(`Step ${stepId} not found in workflow definition`);
-    }
-
-    return {
-      id: taskId,
-      businessId: instance.businessId,
-      workflowInstanceId: instanceId,
-      stepId,
-      type: step.type,
-      name: step.name,
-      status: step.status,
-      config: workflowStep.config,
-      inputData: this.resolveInputData(instance, workflowStep),
-    };
-  }
-
-  private resolveInputData(instance: WorkflowInstance, step: WorkflowStep): Record<string, any> {
-    const inputData: Record<string, any> = {};
-    const variables = {
-      input: instance.input,
-      steps: instance.state.completedSteps.reduce((acc: Record<string, any>, s) => {
-        acc[s.stepId] = { output: s.output };
-        return acc;
-      }, {}),
-    };
-
-    for (const [key, path] of Object.entries(step.config.inputMapping)) {
-      inputData[key] = this.resolveJsonPath(variables, path as string);
-    }
-
-    return inputData;
-  }
-
-  private resolveJsonPath(obj: any, path: string): any {
-    const parts = path.split('.');
-    let current = obj;
-
-    for (const part of parts) {
-      if (part.startsWith('$')) continue;
-      if (!current) return undefined;
-      current = current[part];
-    }
-
-    return current;
-  }
-
-  async completeTask(taskId: string, formData: Record<string, any>): Promise<void> {
-    const [instanceId, stepId] = taskId.split('-');
-    const instance = await this.workflowInstanceRepo.findOne({
-      where: { id: instanceId },
-      relations: ['workflowDefinition'],
-    });
-
-    if (!instance) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
+  async completeInstanceStep(instanceId: string, stepId: string, formData: Record<string, any>): Promise<void> {
+    const instance = await this.getInstance(instanceId);
 
     const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
     if (stepIndex === -1) {
@@ -259,50 +197,5 @@ export class WorkflowService {
     instance.state.completedSteps.push(completedStep);
 
     await this.workflowInstanceRepo.save(instance);
-  }
-
-  async validateWorkflowDefinition(
-    createDto: CreateWorkflowDefinitionDto,
-  ): Promise<boolean> {
-    // Basic validation
-    if (
-      !createDto.steps ||
-      !Array.isArray(createDto.steps) ||
-      createDto.steps.length === 0
-    ) {
-      throw new Error('Workflow must have at least one step');
-    }
-
-    // Validate each step
-    for (const step of createDto.steps) {
-      if (!step.id || !step.name || !step.type) {
-        throw new Error(
-          `Step ${step.name || 'unknown'} is missing required fields`,
-        );
-      }
-
-      if (!step.config) {
-        throw new Error(`Step ${step.name} is missing configuration`);
-      }
-
-      // Validate step type
-      if (!step.config.type) {
-        throw new Error(`Step ${step.name} is missing task type configuration`);
-      }
-
-      // Validate dependencies exist
-      if (step.dependencies) {
-        for (const depId of step.dependencies) {
-          const dependencyExists = createDto.steps.some((s) => s.id === depId);
-          if (!dependencyExists) {
-            throw new Error(
-              `Step ${step.name} has invalid dependency: ${depId}`,
-            );
-          }
-        }
-      }
-    }
-
-    return true;
   }
 }

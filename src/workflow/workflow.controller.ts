@@ -24,6 +24,9 @@ import { WorkflowDefinition } from './entities/workflow-definition.entity';
 import { WorkflowInstance } from './entities/workflow-instance.entity';
 import { WorkflowExecutionService } from './workflow-execution.service';
 import { WorkflowService } from './workflow.service';
+import { TaskDto } from '../tasks/dto/task.dto';
+import { CompleteTaskDto } from '../tasks/dto/complete-task.dto';
+import { RejectTaskDto } from '../tasks/dto/reject-task.dto';
 
 @ApiTags('workflows')
 @Controller('workflows')
