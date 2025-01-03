@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+.turbo
+.vscode/
+
 # Logs
 logs
 *.log
