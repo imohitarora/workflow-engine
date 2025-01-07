@@ -4,7 +4,7 @@ import {
   Get,
   NotFoundException,
   Param,
-  Post
+  Post,
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -26,7 +26,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) { }
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow definition' })

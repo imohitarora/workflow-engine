@@ -1,15 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
-import { DataSource } from 'typeorm';
 import { AppModule } from '../src/app.module';
 import { CreateWorkflowDefinitionDto } from '../src/workflow/dto/create-workflow-definition.dto';
 import { StartWorkflowDto } from '../src/workflow/dto/start-workflow.dto';
 import { StepType } from '../src/workflow/entities/workflow-definition.entity';
 import { WorkflowStatus } from '../src/workflow/enums/workflow-status.enum';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { WorkflowDefinition } from '../src/workflow/entities/workflow-definition.entity';
-import { WorkflowInstance } from '../src/workflow/entities/workflow-instance.entity';
 
 describe('Workflow E2E Test', () => {
   let app: INestApplication;
@@ -20,20 +16,7 @@ describe('Workflow E2E Test', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    })
-      .overrideModule(TypeOrmModule)
-      .useModule(TypeOrmModule.forRoot({
-        type: 'postgres',
-        host: 'localhost',
-        port: 5432,
-        username: 'postgres',
-        password: 'postgres',
-        database: 'workflow_engine_test',
-        schema: 'public',
-        autoLoadEntities: true,
-        synchronize: true,
-      }))
-      .compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -73,12 +56,12 @@ describe('Workflow E2E Test', () => {
             handler: 'approvalTask',
             inputMapping: {
               requestId: '$.input.requestId',
-              amount: '$.input.amount'
+              amount: '$.input.amount',
             },
             outputMapping: {
               approved: '$.output.approved',
-              comments: '$.output.comments'
-            }
+              comments: '$.output.comments',
+            },
           },
         },
       ],
@@ -122,7 +105,7 @@ describe('Workflow E2E Test', () => {
         runningInstance = instanceResponse.body;
         break;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     expect(runningInstance?.status).toBe(WorkflowStatus.RUNNING);
@@ -135,7 +118,9 @@ describe('Workflow E2E Test', () => {
       .expect(200);
 
     expect(response.body.length).toBeGreaterThan(0);
-    const pendingTask = response.body.find(task => task.workflowInstanceId.includes(workflowInstanceId));
+    const pendingTask = response.body.find((task) =>
+      task.workflowInstanceId.includes(workflowInstanceId),
+    );
     expect(pendingTask).toBeDefined();
     taskId = pendingTask.id;
     expect(taskId).toBeDefined();
@@ -155,7 +140,9 @@ describe('Workflow E2E Test', () => {
       .expect(200);
 
     expect(tasksResponse.body.length).toBeGreaterThan(0);
-    const pendingTask = tasksResponse.body.find(task => task.workflowInstanceId.includes(workflowInstanceId));
+    const pendingTask = tasksResponse.body.find((task) =>
+      task.workflowInstanceId.includes(workflowInstanceId),
+    );
     expect(pendingTask).toBeDefined();
     taskId = pendingTask.id;
     expect(taskId).toContain(workflowInstanceId);
@@ -176,7 +163,7 @@ describe('Workflow E2E Test', () => {
         completedInstance = instanceResponse.body;
         break;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     expect(completedInstance?.status).toBe(WorkflowStatus.COMPLETED);
@@ -220,7 +207,7 @@ describe('Workflow E2E Test', () => {
         runningInstance = instanceResponse.body;
         break;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     expect(runningInstance?.status).toBe(WorkflowStatus.RUNNING);
@@ -231,7 +218,9 @@ describe('Workflow E2E Test', () => {
       .expect(200);
 
     expect(tasksResponse.body.length).toBeGreaterThan(0);
-    const pendingTask = tasksResponse.body.find(task => task.workflowInstanceId.includes(startResponse.body.id));
+    const pendingTask = tasksResponse.body.find((task) =>
+      task.workflowInstanceId.includes(startResponse.body.id),
+    );
     expect(pendingTask).toBeDefined();
     const newTaskId = pendingTask.id;
     expect(newTaskId).toContain(startResponse.body.id);
