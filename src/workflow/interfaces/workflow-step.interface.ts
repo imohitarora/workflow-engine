@@ -24,21 +24,10 @@ export interface WorkflowStep {
         pattern?: string;
         patternError?: string;
         showIf?: string;
-        options?: Array<{
-          value: string;
-          label: string;
-        }>;
+        options?: Array<{ label: string; value: string }>;
       }>;
     };
   };
-  timeout?: number;
-  retryConfig?: {
-    maxAttempts: number;
-    backoffFactor: number;
-    initialInterval: number;
-  };
-  condition?: {
-    type: 'javascript' | 'jsonpath';
-    expression: string;
-  };
 }
+
+// Removed status and execution details to separate them into StepExecution entity

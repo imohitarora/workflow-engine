@@ -34,7 +34,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) { }
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow definition' })
@@ -181,12 +181,12 @@ export class WorkflowController {
                   income: '$.input.income',
                   loanAmount: '$.input.loanAmount',
                   loanTerm: '$.input.loanTerm',
-                  ssn: '$.input.ssn'
+                  ssn: '$.input.ssn',
                 },
                 outputMapping: {
                   isValid: '$.output.isValid',
                   validationErrors: '$.output.errors',
-                  notes: '$.output.notes'
+                  notes: '$.output.notes',
                 },
                 form: {
                   title: 'Validate Loan Application',
@@ -195,23 +195,23 @@ export class WorkflowController {
                       name: 'isValid',
                       label: 'Application Valid?',
                       type: 'boolean',
-                      required: true
+                      required: true,
                     },
                     {
                       name: 'errors',
                       label: 'Validation Errors',
                       type: 'array',
                       items: { type: 'string' },
-                      showIf: 'isValid === false'
+                      showIf: 'isValid === false',
                     },
                     {
                       name: 'notes',
                       label: 'Additional Notes',
                       type: 'text',
-                      multiline: true
-                    }
-                  ]
-                }
+                      multiline: true,
+                    },
+                  ],
+                },
               },
               timeout: 172800000, // 48 hours for human task
             },
@@ -225,12 +225,12 @@ export class WorkflowController {
                 handler: 'performCreditCheck',
                 inputMapping: {
                   applicantName: '$.input.applicantName',
-                  ssn: '$.input.ssn'
+                  ssn: '$.input.ssn',
                 },
                 outputMapping: {
                   creditScore: '$.output.score',
                   creditReport: '$.output.report',
-                  manualCheckNotes: '$.output.notes'
+                  manualCheckNotes: '$.output.notes',
                 },
                 form: {
                   title: 'Credit Score Check',
@@ -241,7 +241,7 @@ export class WorkflowController {
                       type: 'number',
                       required: true,
                       min: 300,
-                      max: 850
+                      max: 850,
                     },
                     {
                       name: 'report',
@@ -250,23 +250,24 @@ export class WorkflowController {
                       properties: {
                         delinquencies: { type: 'number' },
                         creditUtilization: { type: 'number' },
-                        lengthOfHistory: { type: 'number' }
-                      }
+                        lengthOfHistory: { type: 'number' },
+                      },
                     },
                     {
                       name: 'notes',
                       label: 'Manual Check Notes',
                       type: 'text',
-                      multiline: true
-                    }
-                  ]
-                }
+                      multiline: true,
+                    },
+                  ],
+                },
               },
               timeout: 172800000, // 48 hours for human task
               condition: {
                 type: 'javascript',
-                expression: 'steps["validate-application"].output.isValid === true'
-              }
+                expression:
+                  'steps["validate-application"].output.isValid === true',
+              },
             },
             {
               id: 'assess-risk',
@@ -281,12 +282,12 @@ export class WorkflowController {
                   creditReport: '$.steps.check-credit.output.creditReport',
                   income: '$.input.income',
                   loanAmount: '$.input.loanAmount',
-                  loanTerm: '$.input.loanTerm'
+                  loanTerm: '$.input.loanTerm',
                 },
                 outputMapping: {
                   riskLevel: '$.output.riskLevel',
                   recommendedRate: '$.output.recommendedRate',
-                  assessmentNotes: '$.output.notes'
+                  assessmentNotes: '$.output.notes',
                 },
                 form: {
                   title: 'Risk Assessment',
@@ -299,8 +300,8 @@ export class WorkflowController {
                       options: [
                         { value: 'LOW', label: 'Low Risk' },
                         { value: 'MEDIUM', label: 'Medium Risk' },
-                        { value: 'HIGH', label: 'High Risk' }
-                      ]
+                        { value: 'HIGH', label: 'High Risk' },
+                      ],
                     },
                     {
                       name: 'recommendedRate',
@@ -309,18 +310,18 @@ export class WorkflowController {
                       required: true,
                       min: 0,
                       max: 30,
-                      step: 0.25
+                      step: 0.25,
                     },
                     {
                       name: 'notes',
                       label: 'Assessment Notes',
                       type: 'text',
-                      multiline: true
-                    }
-                  ]
-                }
+                      multiline: true,
+                    },
+                  ],
+                },
               },
-              timeout: 172800000 // 48 hours for human task
+              timeout: 172800000, // 48 hours for human task
             },
             {
               id: 'make-decision',
@@ -337,14 +338,14 @@ export class WorkflowController {
                   creditReport: '$.steps.check-credit.output.creditReport',
                   income: '$.input.income',
                   loanAmount: '$.input.loanAmount',
-                  loanTerm: '$.input.loanTerm'
+                  loanTerm: '$.input.loanTerm',
                 },
                 outputMapping: {
                   approved: '$.output.approved',
                   loanId: '$.output.loanId',
                   interestRate: '$.output.interestRate',
                   reason: '$.output.reason',
-                  decisionNotes: '$.output.notes'
+                  decisionNotes: '$.output.notes',
                 },
                 form: {
                   title: 'Final Loan Decision',
@@ -353,7 +354,7 @@ export class WorkflowController {
                       name: 'approved',
                       label: 'Approve Loan?',
                       type: 'boolean',
-                      required: true
+                      required: true,
                     },
                     {
                       name: 'loanId',
@@ -361,7 +362,7 @@ export class WorkflowController {
                       type: 'string',
                       required: true,
                       pattern: '^LOAN-\\d{4}-\\d{4}$',
-                      patternError: 'Must be in format LOAN-YYYY-NNNN'
+                      patternError: 'Must be in format LOAN-YYYY-NNNN',
                     },
                     {
                       name: 'interestRate',
@@ -370,26 +371,26 @@ export class WorkflowController {
                       required: true,
                       min: 0,
                       max: 30,
-                      step: 0.25
+                      step: 0.25,
                     },
                     {
                       name: 'reason',
                       label: 'Decision Reason',
                       type: 'text',
                       required: true,
-                      multiline: true
+                      multiline: true,
                     },
                     {
                       name: 'notes',
                       label: 'Additional Notes',
                       type: 'text',
-                      multiline: true
-                    }
-                  ]
-                }
+                      multiline: true,
+                    },
+                  ],
+                },
               },
-              timeout: 172800000 // 48 hours for human task
-            }
+              timeout: 172800000, // 48 hours for human task
+            },
           ],
           inputSchema: {
             type: 'object',
@@ -398,15 +399,15 @@ export class WorkflowController {
               ssn: { type: 'string' },
               income: { type: 'number' },
               loanAmount: { type: 'number' },
-              loanTerm: { type: 'number' }
+              loanTerm: { type: 'number' },
             },
             required: [
               'applicantName',
               'ssn',
               'income',
               'loanAmount',
-              'loanTerm'
-            ]
+              'loanTerm',
+            ],
           },
           outputSchema: {
             type: 'object',
@@ -414,12 +415,12 @@ export class WorkflowController {
               approved: { type: 'boolean' },
               loanId: { type: 'string' },
               interestRate: { type: 'number' },
-              reason: { type: 'string' }
+              reason: { type: 'string' },
             },
-            required: ['approved', 'loanId', 'interestRate', 'reason']
-          }
-        }
-      }
+            required: ['approved', 'loanId', 'interestRate', 'reason'],
+          },
+        },
+      },
     },
   })
   create(@Body() createWorkflowDto: CreateWorkflowDefinitionDto) {
@@ -541,16 +542,20 @@ export class WorkflowController {
   }
 
   @Get('instances/:id')
-  @ApiOperation({ summary: 'Get workflow instance status' })
+  @ApiOperation({ summary: 'Get workflow instance details' })
   @ApiResponse({
     status: 200,
-    description: 'Returns the workflow instance details',
+    description: 'The workflow instance details',
     type: WorkflowInstance,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Workflow instance not found',
   })
   async getWorkflowInstance(
     @Param('id') id: string,
   ): Promise<WorkflowInstance> {
-    const instance = await this.workflowService.findInstanceById(id);
+    const instance = await this.workflowService.getInstance(id);
     if (!instance) {
       throw new NotFoundException(`Workflow instance ${id} not found`);
     }

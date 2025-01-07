@@ -157,7 +157,7 @@ export class WorkflowService {
     }
   }
 
-  async rejectInstanceStep(instanceId: string, stepId: string, reason: string): Promise<void> {
+  async rejectInstanceStep(instanceId: string, stepId: string, formData: Record<string, any>): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
     const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
@@ -166,9 +166,17 @@ export class WorkflowService {
     }
 
     // Update step status and error
-    instance.state.currentSteps[stepIndex].status = StepStatus.FAILED;
-    instance.state.currentSteps[stepIndex].error = reason;
-    instance.state.currentSteps[stepIndex].endTime = new Date();
+    const rejectedStep = {
+      ...instance.state.currentSteps[stepIndex],
+      status: StepStatus.FAILED,
+      output: formData,
+      error: formData.comments,
+      endTime: new Date(),
+    };
+
+    // Remove from current steps and add to completed steps
+    instance.state.currentSteps.splice(stepIndex, 1);
+    instance.state.completedSteps.push(rejectedStep);
 
     // Update workflow status
     instance.status = WorkflowStatus.FAILED;
@@ -195,6 +203,13 @@ export class WorkflowService {
     // Remove from current steps and add to completed steps
     instance.state.currentSteps.splice(stepIndex, 1);
     instance.state.completedSteps.push(completedStep);
+
+    // Update workflow status if all steps are completed
+    if (instance.state.currentSteps.length === 0 && 
+        instance.state.completedSteps.length === instance.workflowDefinition.steps.length) {
+      instance.status = WorkflowStatus.COMPLETED;
+      instance.output = formData;
+    }
 
     await this.workflowInstanceRepo.save(instance);
   }

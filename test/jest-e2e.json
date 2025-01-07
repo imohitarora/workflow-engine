@@ -9,11 +9,9 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  },
-  "globalSetup": "<rootDir>/jest-global-setup.ts",
+  },  
   "setupFilesAfterEnv": [
     "<rootDir>/jest.setup.ts"
   ],
-  "testTimeout": 10000,
-  "testSequencer": "<rootDir>/custom-sequencer.js"
+  "testTimeout": 10000
 }

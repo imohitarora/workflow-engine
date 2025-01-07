@@ -1,6 +1,6 @@
 import {
   Body, Controller, Get, NotFoundException,
-  Param, Post
+  Param, Post, HttpCode, HttpStatus
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -44,6 +44,7 @@ export class TasksController {
   }
 
   @Post(':id/complete')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Complete a task' })
   @ApiResponse({ status: 200, description: 'Task completed successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -51,10 +52,12 @@ export class TasksController {
     @Param('id') id: string,
     @Body() completeTaskDto: CompleteTaskDto,
   ): Promise<void> {
+    console.log('completeTaskDto', completeTaskDto, id);
     await this.tasksService.completeTask(id, completeTaskDto.formData);
   }
 
   @Post(':id/reject')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reject a task' })
   @ApiResponse({ status: 200, description: 'Task rejected successfully' })
   @ApiResponse({ status: 404, description: 'Task not found' })
@@ -62,6 +65,6 @@ export class TasksController {
     @Param('id') id: string,
     @Body() rejectTaskDto: RejectTaskDto,
   ): Promise<void> {
-    await this.tasksService.rejectTask(id, rejectTaskDto.reason);
+    await this.tasksService.rejectTask(id, rejectTaskDto.formData);
   }
 }

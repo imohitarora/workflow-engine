@@ -4,4 +4,5 @@ export enum StepStatus {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   SKIPPED = 'SKIPPED',
+  RETRYING = 'RETRYING',
 }

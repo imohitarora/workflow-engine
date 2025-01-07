@@ -5,4 +5,6 @@ export enum WorkflowStatus {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   CANCELLED = 'CANCELLED',
+  RECOVERED = 'RECOVERED',
+  RETRYING = 'RETRYING',
 }
