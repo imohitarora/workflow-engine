@@ -1,21 +1,18 @@
-// src/tasks/tasks.service.ts
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { TaskExecution } from './entities/task-execution.entity';
-import { WorkflowService } from '../workflow/workflow.service';
-import { TaskStatus } from './enums/task-status.enum';
-import { TaskDto } from './dto/task.dto';
-import { StepType } from '../workflow/enums/step-type.enum';
+// NestJS imports
+import { Injectable, NotFoundException } from '@nestjs/common';
+
+// Workflow related imports
 import { WorkflowStatus } from '../workflow/enums/workflow-status.enum';
+import { StepStatus } from '../workflow/enums/step-status.enum';
+import { WorkflowService } from '../workflow/workflow.service';
+
+// DTOs
+import { TaskDto } from './dto/task.dto';
+import { CreateWorkflowDefinitionDto } from '../workflow/dto/create-workflow-definition.dto';
 
 @Injectable()
 export class TasksService {
-  constructor(
-    @InjectRepository(TaskExecution)
-    private taskExecutionRepo: Repository<TaskExecution>,
-    private readonly workflowService: WorkflowService,
-  ) {}
+  constructor(private readonly workflowService: WorkflowService) {}
 
   async findPendingTasks(): Promise<TaskDto[]> {
     const instances = await this.workflowService.findInstancesByStatus(
@@ -26,136 +23,67 @@ export class TasksService {
     for (const instance of instances) {
       const currentSteps = instance.state.currentSteps || [];
       for (const step of currentSteps) {
-        if (step.type === StepType.TASK && step.config?.type === 'human') {
-          // Check if task already exists
-          let taskExecution = await this.taskExecutionRepo.findOne({
-            where: {
-              workflowInstanceId: instance.id,
-              stepId: step.stepId,
-              status: TaskStatus.PENDING,
-            },
+        if (step.type === 'TASK' && step.config?.type === 'human') {
+          pendingTasks.push({
+            id: `${instance.id}-${step.stepId}`,
+            name: step.name,
+            workflowInstanceId: instance.id,
+            stepId: step.stepId,
+            status: StepStatus.PENDING,
+            type: step.config?.type,
+            form: step.config?.form,
           });
-
-          if (!taskExecution) {
-            taskExecution = await this.taskExecutionRepo.save({
-              workflowInstanceId: instance.id,
-              stepId: step.stepId,
-              name: step.name,
-              status: TaskStatus.PENDING,
-            });
-          }
-
-          pendingTasks.push(this.mapToTaskDto(taskExecution, step));
         }
       }
     }
     return pendingTasks;
   }
 
-  async getAllTasks(): Promise<TaskDto[]> {
-    const tasks = await this.taskExecutionRepo.find({
-      relations: ['workflowInstance'],
-      order: { createdAt: 'DESC' },
-    });
-
-    return tasks.map(task => {
-      const instance = task.workflowInstance;
-      const step = instance.workflowDefinition.steps.find(s => s.id === task.stepId);
-      return this.mapToTaskDto(task, step);
-    });
+  async approveTask(taskId: string): Promise<void> {
+    const [instanceId, stepId] = taskId.split('-');
+    await this.workflowService.approveInstanceStep(instanceId, stepId);
   }
 
-  async getTask(taskId: string): Promise<TaskDto> {
-    const taskExecution = await this.taskExecutionRepo.findOne({
-      where: { id: taskId },
-      relations: ['workflowInstance'],
+  async rejectTask(taskId: string, reason: string): Promise<void> {
+    const [instanceId, stepId] = taskId.split('-');
+    await this.workflowService.rejectInstanceStep(instanceId, stepId, {
+      comments: reason,
     });
-
-    if (!taskExecution) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    const instance = taskExecution.workflowInstance;
-    const step = instance.workflowDefinition.steps.find(
-      s => s.id === taskExecution.stepId
-    );
-
-    return this.mapToTaskDto(taskExecution, step);
-  }
-
-  async completeTask(taskId: string, formData: Record<string, any>): Promise<void> {
-    const taskExecution = await this.taskExecutionRepo.findOne({
-      where: { id: taskId },
-    });
-
-    if (!taskExecution) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    // Update task execution
-    taskExecution.status = TaskStatus.COMPLETED;
-    taskExecution.formData = formData;
-    await this.taskExecutionRepo.save(taskExecution);
-
-    // Complete the workflow step
-    await this.workflowService.completeInstanceStep(
-      taskExecution.workflowInstanceId,
-      taskExecution.stepId,
-      formData,
-    );
-  }
-
-  async rejectTask(taskId: string, comments: string): Promise<void> {
-    const taskExecution = await this.taskExecutionRepo.findOne({
-      where: { id: taskId },
-    });
-
-    if (!taskExecution) {
-      throw new NotFoundException(`Task ${taskId} not found`);
-    }
-
-    // Update task execution
-    taskExecution.status = TaskStatus.REJECTED;
-    taskExecution.comments = comments;
-    await this.taskExecutionRepo.save(taskExecution);
-
-    // Reject the workflow step
-    await this.workflowService.rejectInstanceStep(
-      taskExecution.workflowInstanceId,
-      taskExecution.stepId,
-      { comments }
-    );
   }
 
   async getTaskDetails(taskId: string): Promise<any> {
-    const taskExecution = await this.taskExecutionRepo.findOne({
-      where: { id: taskId },
-      relations: ['workflowInstance'],
-    });
-
-    if (!taskExecution) {
+    const [instanceId, stepId] = taskId.split('-');
+    const instance = await this.workflowService.getInstance(instanceId);
+    if (!instance) {
       throw new NotFoundException(`Task ${taskId} not found`);
     }
 
-    const instance = taskExecution.workflowInstance;
+    const step = instance.state.currentSteps.find((s) => s.stepId === stepId);
+    if (!step) {
+      throw new NotFoundException(
+        `Step ${stepId} not found in workflow ${instanceId}`,
+      );
+    }
+
     const workflowStep = instance.workflowDefinition.steps.find(
-      s => s.id === taskExecution.stepId
+      (s) => s.id === stepId,
     );
+    if (!workflowStep) {
+      throw new NotFoundException(
+        `Step ${stepId} not found in workflow definition`,
+      );
+    }
 
     return {
-      id: taskExecution.id,
+      id: taskId,
       businessId: instance.businessId,
-      workflowInstanceId: taskExecution.workflowInstanceId,
-      stepId: taskExecution.stepId,
-      type: workflowStep.type,
-      name: taskExecution.name,
-      status: taskExecution.status,
+      workflowInstanceId: instanceId,
+      stepId,
+      type: step.type,
+      name: step.name,
+      status: step.status,
       config: workflowStep.config,
       inputData: this.resolveInputData(instance, workflowStep),
-      formData: taskExecution.formData,
-      comments: taskExecution.comments,
-      createdAt: taskExecution.createdAt,
-      updatedAt: taskExecution.updatedAt,
     };
   }
 
@@ -192,19 +120,103 @@ export class TasksService {
     return current;
   }
 
-  private mapToTaskDto(taskExecution: TaskExecution, step: any): TaskDto {
-    return {
-      id: taskExecution.id,
-      name: taskExecution.name,
-      workflowInstanceId: taskExecution.workflowInstanceId,
-      stepId: taskExecution.stepId,
-      status: taskExecution.status,
-      type: step?.config?.type,
-      form: step?.config?.form,
-      formData: taskExecution.formData,
-      comments: taskExecution.comments,
-      createdAt: taskExecution.createdAt,
-      updatedAt: taskExecution.updatedAt,
-    };
+  async completeTask(
+    taskId: string,
+    formData: Record<string, any>,
+  ): Promise<void> {
+    const [instanceId, stepId] = taskId.split('-');
+    await this.workflowService.completeInstanceStep(
+      instanceId,
+      stepId,
+      formData,
+    );
+  }
+
+  async validateWorkflowDefinition(
+    createDto: CreateWorkflowDefinitionDto,
+  ): Promise<boolean> {
+    // Basic validation
+    if (
+      !createDto.steps ||
+      !Array.isArray(createDto.steps) ||
+      createDto.steps.length === 0
+    ) {
+      throw new Error('Workflow must have at least one step');
+    }
+
+    // Validate each step
+    for (const step of createDto.steps) {
+      if (!step.id || !step.name || !step.type) {
+        throw new Error(
+          `Step ${step.name || 'unknown'} is missing required fields`,
+        );
+      }
+
+      if (!step.config) {
+        throw new Error(`Step ${step.name} is missing configuration`);
+      }
+
+      // Validate step type
+      if (!step.config.type) {
+        throw new Error(`Step ${step.name} is missing task type configuration`);
+      }
+
+      // Validate dependencies exist
+      if (step.dependencies) {
+        for (const depId of step.dependencies) {
+          const dependencyExists = createDto.steps.some((s) => s.id === depId);
+          if (!dependencyExists) {
+            throw new Error(
+              `Step ${step.name} has invalid dependency: ${depId}`,
+            );
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  async getAllTasks(): Promise<TaskDto[]> {
+    const instances = await this.workflowService.findInstances();
+    const tasks: TaskDto[] = [];
+    for (const instance of instances) {
+      const humanSteps = instance.state.currentSteps.filter(
+        (step) => step.config?.type === 'human',
+      );
+      tasks.push(
+        ...humanSteps.map((step) => ({
+          id: `${instance.id}-${step.stepId}`,
+          name: step.name,
+          status: step.status,
+          type: step.config?.type,
+          workflowInstanceId: instance.id,
+          stepId: step.stepId,
+          form: step.config?.form,
+        })),
+      );
+    }
+    return tasks;
+  }
+
+  async getTask(taskId: string): Promise<TaskDto | null> {
+    const instances = await this.workflowService.findInstances();
+    for (const instance of instances) {
+      const step = instance.state.currentSteps.find(
+        (s) => s.stepId === taskId && s.config?.type === 'human',
+      );
+      if (step) {
+        return {
+          id: `${instance.id}-${step.stepId}`,
+          name: step.name,
+          status: step.status,
+          type: step.config?.type,
+          workflowInstanceId: instance.id,
+          stepId: step.stepId,
+          form: step.config?.form,
+        };
+      }
+    }
+    return null;
   }
 }

@@ -12,27 +12,8 @@ import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dt
 import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
 
 // Enums and Interfaces
-import { WorkflowStatus } from './enums/workflow-status.enum';
 import { StepStatus } from './enums/step-status.enum';
-import { WorkflowStep } from './interfaces/workflow-step.interface';
-
-interface TaskDto {
-  id: string;
-  name: string;
-  status: StepStatus;
-  form: any;
-}
-
-interface CompletedStep {
-  stepId: string;
-  name: string;
-  type: string;
-  config: any;
-  status: StepStatus;
-  output: any;
-  endTime: Date;
-  error?: string;
-}
+import { WorkflowStatus } from './enums/workflow-status.enum';
 
 @Injectable()
 export class WorkflowService {
@@ -41,7 +22,7 @@ export class WorkflowService {
     private workflowDefinitionRepo: Repository<WorkflowDefinition>,
     @InjectRepository(WorkflowInstance)
     private workflowInstanceRepo: Repository<WorkflowInstance>,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateWorkflowDefinitionDto,
@@ -52,10 +33,12 @@ export class WorkflowService {
       description: createDto.description,
       steps: createDto.steps.map((step) => ({
         ...step,
-        config: step.config ? {
-          ...step.config,
-          type: step.config.type as 'human' | 'script' | 'http',
-        } : undefined,
+        config: step.config
+          ? {
+              ...step.config,
+              type: step.config.type as 'human' | 'script' | 'http',
+            }
+          : undefined,
       })),
       inputSchema: createDto.inputSchema,
       outputSchema: createDto.outputSchema,
@@ -102,14 +85,18 @@ export class WorkflowService {
     });
   }
 
-  async findInstancesByBusinessId(businessId: string): Promise<WorkflowInstance[]> {
+  async findInstancesByBusinessId(
+    businessId: string,
+  ): Promise<WorkflowInstance[]> {
     return this.workflowInstanceRepo.find({
       where: { businessId },
       relations: ['workflowDefinition'],
     });
   }
 
-  async findInstancesByStatus(status: WorkflowStatus): Promise<WorkflowInstance[]> {
+  async findInstancesByStatus(
+    status: WorkflowStatus,
+  ): Promise<WorkflowInstance[]> {
     return this.workflowInstanceRepo.find({
       where: { status },
       relations: ['workflowDefinition'],
@@ -143,7 +130,7 @@ export class WorkflowService {
       const completedStep = {
         ...step,
         output: { approved: true, status: StepStatus.COMPLETED },
-        endTime: new Date()
+        endTime: new Date(),
       };
 
       instance.state.completedSteps = [
@@ -164,12 +151,20 @@ export class WorkflowService {
     }
   }
 
-  async rejectInstanceStep(instanceId: string, stepId: string, formData: Record<string, any>): Promise<void> {
+  async rejectInstanceStep(
+    instanceId: string,
+    stepId: string,
+    formData: Record<string, any>,
+  ): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
-    const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
+    const stepIndex = instance.state.currentSteps.findIndex(
+      (s) => s.stepId === stepId,
+    );
     if (stepIndex === -1) {
-      throw new NotFoundException(`Step ${stepId} not found in workflow ${instanceId}`);
+      throw new NotFoundException(
+        `Step ${stepId} not found in workflow ${instanceId}`,
+      );
     }
 
     // Update step status and error
@@ -191,12 +186,20 @@ export class WorkflowService {
     await this.workflowInstanceRepo.save(instance);
   }
 
-  async completeInstanceStep(instanceId: string, stepId: string, formData: Record<string, any>): Promise<void> {
+  async completeInstanceStep(
+    instanceId: string,
+    stepId: string,
+    formData: Record<string, any>,
+  ): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
-    const stepIndex = instance.state.currentSteps.findIndex(s => s.stepId === stepId);
+    const stepIndex = instance.state.currentSteps.findIndex(
+      (s) => s.stepId === stepId,
+    );
     if (stepIndex === -1) {
-      throw new NotFoundException(`Step ${stepId} not found in workflow ${instanceId}`);
+      throw new NotFoundException(
+        `Step ${stepId} not found in workflow ${instanceId}`,
+      );
     }
 
     // Update step status and output
@@ -212,8 +215,11 @@ export class WorkflowService {
     instance.state.completedSteps.push(completedStep);
 
     // Update workflow status if all steps are completed
-    if (instance.state.currentSteps.length === 0 &&
-      instance.state.completedSteps.length === instance.workflowDefinition.steps.length) {
+    if (
+      instance.state.currentSteps.length === 0 &&
+      instance.state.completedSteps.length ===
+        instance.workflowDefinition.steps.length
+    ) {
       instance.status = WorkflowStatus.COMPLETED;
       instance.output = formData;
     }

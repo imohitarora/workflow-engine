@@ -18,10 +18,16 @@ export class WorkflowStateMachine {
   private canTransitionTo(newState: WorkflowStatus): boolean {
     const validTransitions = {
       [WorkflowStatus.PENDING]: [WorkflowStatus.RUNNING],
-      [WorkflowStatus.RUNNING]: [WorkflowStatus.COMPLETED, WorkflowStatus.FAILED],
+      [WorkflowStatus.RUNNING]: [
+        WorkflowStatus.COMPLETED,
+        WorkflowStatus.FAILED,
+      ],
       [WorkflowStatus.COMPLETED]: [],
       [WorkflowStatus.FAILED]: [WorkflowStatus.RETRYING],
-      [WorkflowStatus.RETRYING]: [WorkflowStatus.RUNNING, WorkflowStatus.FAILED],
+      [WorkflowStatus.RETRYING]: [
+        WorkflowStatus.RUNNING,
+        WorkflowStatus.FAILED,
+      ],
     };
     return validTransitions[this.currentState].includes(newState);
   }

@@ -1,12 +1,14 @@
 import {
-  Body, Controller, Get, NotFoundException,
-  Param, Post, HttpCode, HttpStatus
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  Param,
+  Post,
 } from '@nestjs/common';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CompleteTaskDto } from './dto/complete-task.dto';
 import { RejectTaskDto } from './dto/reject-task.dto';
 import { TaskDto } from './dto/task.dto';
@@ -15,7 +17,7 @@ import { TasksService } from './tasks.service';
 @ApiTags('tasks')
 @Controller('tasks')
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) { }
+  constructor(private readonly tasksService: TasksService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all tasks' })
