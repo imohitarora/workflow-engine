@@ -1,15 +1,15 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  IsString,
-  IsEnum,
   IsArray,
+  IsEnum,
+  IsNumber,
   IsObject,
   IsOptional,
-  IsNumber,
+  IsString,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { StepType } from '../entities/workflow-definition.entity';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { StepType } from '../enums/step-type.enum';
 
 export class StepConfigDto {
   @ApiProperty({ description: 'Type of task (script, http, human)' })
@@ -57,6 +57,10 @@ export class WorkflowStepDto {
   @ApiProperty({ description: 'Unique identifier for the workflow step' })
   @IsString()
   id: string;
+
+  @ApiProperty({ description: 'Unique key for the workflow step' })
+  @IsString()
+  key: string;
 
   @ApiProperty({ description: 'Name of the workflow step' })
   @IsString()

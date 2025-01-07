@@ -4,8 +4,8 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { CreateWorkflowDefinitionDto } from '../src/workflow/dto/create-workflow-definition.dto';
 import { StartWorkflowDto } from '../src/workflow/dto/start-workflow.dto';
-import { StepType } from '../src/workflow/entities/workflow-definition.entity';
 import { WorkflowStatus } from '../src/workflow/enums/workflow-status.enum';
+import { StepType } from 'src/workflow/enums/step-type.enum';
 
 describe('Workflow E2E Test', () => {
   let app: INestApplication;

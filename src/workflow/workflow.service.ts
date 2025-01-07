@@ -14,6 +14,7 @@ import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dt
 // Enums and Interfaces
 import { StepStatus } from './enums/step-status.enum';
 import { WorkflowStatus } from './enums/workflow-status.enum';
+import { WorkflowStep } from './entities/workflow-step.entity';
 
 @Injectable()
 export class WorkflowService {
@@ -22,30 +23,48 @@ export class WorkflowService {
     private workflowDefinitionRepo: Repository<WorkflowDefinition>,
     @InjectRepository(WorkflowInstance)
     private workflowInstanceRepo: Repository<WorkflowInstance>,
-  ) {}
+    @InjectRepository(WorkflowStep)
+    private workflowStepRepo: Repository<WorkflowStep>,
+  ) { }
 
   async create(
     createDto: CreateWorkflowDefinitionDto,
   ): Promise<WorkflowDefinition> {
-    // Convert DTO to entity
-    const workflow = this.workflowDefinitionRepo.create({
+    // First create the workflow definition without steps
+    const workflowDefinition = this.workflowDefinitionRepo.create({
       name: createDto.name,
       description: createDto.description,
-      steps: createDto.steps.map((step) => ({
-        ...step,
-        config: step.config
-          ? {
-              ...step.config,
-              type: step.config.type as 'human' | 'script' | 'http',
-            }
-          : undefined,
-      })),
       inputSchema: createDto.inputSchema,
       outputSchema: createDto.outputSchema,
     });
 
-    // Save and return the created workflow
-    return await this.workflowDefinitionRepo.save(workflow);
+    // Save the workflow definition first to get its ID
+    const savedWorkflow = await this.workflowDefinitionRepo.save(workflowDefinition);
+
+    // Create the steps with the workflow definition reference
+    const steps = createDto.steps.map((stepDto) => ({
+      key: stepDto.key,
+      name: stepDto.name,
+      type: stepDto.type,
+      dependencies: stepDto.dependencies || [],
+      config: stepDto.config
+        ? {
+          ...stepDto.config,
+          type: stepDto.config.type as 'human' | 'script' | 'http',
+        }
+        : undefined,
+      workflowDefinitionId: savedWorkflow.id,
+      workflowDefinition: savedWorkflow,
+    }));
+
+    // Save the steps
+    savedWorkflow.steps = await this.workflowStepRepo.save(steps);
+
+    // Return the complete workflow with steps
+    return this.workflowDefinitionRepo.findOne({
+      where: { id: savedWorkflow.id },
+      relations: ['steps'],
+    });
   }
 
   async findAll(): Promise<WorkflowDefinition[]> {
@@ -125,7 +144,7 @@ export class WorkflowService {
   async approveInstanceStep(instanceId: string, stepId: string): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
-    const step = instance.state.currentSteps?.find((s) => s.stepId === stepId);
+    const step = instance.state.stepExecutions?.find((s) => s.stepId === stepId);
     if (step) {
       const completedStep = {
         ...step,
@@ -133,18 +152,18 @@ export class WorkflowService {
         endTime: new Date(),
       };
 
-      instance.state.completedSteps = [
-        ...(instance.state.completedSteps || []),
+      instance.state.stepExecutions = [
+        ...(instance.state.stepExecutions || []),
         completedStep,
       ];
-      instance.state.currentSteps = instance.state.currentSteps.filter(
+      instance.state.stepExecutions = instance.state.stepExecutions.filter(
         (s) => s.stepId !== stepId,
       );
 
       await this.workflowInstanceRepo.save(instance);
 
       // Continue workflow execution if there are more steps
-      if (instance.state.currentSteps.length === 0) {
+      if (instance.state.stepExecutions.length === 0) {
         instance.status = WorkflowStatus.COMPLETED;
         await this.workflowInstanceRepo.save(instance);
       }
@@ -158,7 +177,7 @@ export class WorkflowService {
   ): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
-    const stepIndex = instance.state.currentSteps.findIndex(
+    const stepIndex = instance.state.stepExecutions.findIndex(
       (s) => s.stepId === stepId,
     );
     if (stepIndex === -1) {
@@ -169,7 +188,7 @@ export class WorkflowService {
 
     // Update step status and error
     const rejectedStep = {
-      ...instance.state.currentSteps[stepIndex],
+      ...instance.state.stepExecutions[stepIndex],
       status: StepStatus.FAILED,
       output: formData,
       error: formData.comments,
@@ -177,8 +196,8 @@ export class WorkflowService {
     };
 
     // Remove from current steps and add to completed steps
-    instance.state.currentSteps.splice(stepIndex, 1);
-    instance.state.completedSteps.push(rejectedStep);
+    instance.state.stepExecutions.splice(stepIndex, 1);
+    instance.state.stepExecutions.push(rejectedStep);
 
     // Update workflow status
     instance.status = WorkflowStatus.FAILED;
@@ -193,7 +212,7 @@ export class WorkflowService {
   ): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
-    const stepIndex = instance.state.currentSteps.findIndex(
+    const stepIndex = instance.state.stepExecutions.findIndex(
       (s) => s.stepId === stepId,
     );
     if (stepIndex === -1) {
@@ -204,21 +223,21 @@ export class WorkflowService {
 
     // Update step status and output
     const completedStep = {
-      ...instance.state.currentSteps[stepIndex],
+      ...instance.state.stepExecutions[stepIndex],
       status: StepStatus.COMPLETED,
       output: formData,
       endTime: new Date(),
     };
 
     // Remove from current steps and add to completed steps
-    instance.state.currentSteps.splice(stepIndex, 1);
-    instance.state.completedSteps.push(completedStep);
+    instance.state.stepExecutions.splice(stepIndex, 1);
+    instance.state.stepExecutions.push(completedStep);
 
     // Update workflow status if all steps are completed
     if (
-      instance.state.currentSteps.length === 0 &&
-      instance.state.completedSteps.length ===
-        instance.workflowDefinition.steps.length
+      instance.state.stepExecutions.length === 0 &&
+      instance.workflowDefinition.steps.length ===
+      instance.state.stepExecutions.length
     ) {
       instance.status = WorkflowStatus.COMPLETED;
       instance.output = formData;

@@ -1,17 +1,13 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
-  VersionColumn,
+  VersionColumn
 } from 'typeorm';
-
-export enum StepType {
-  TASK = 'TASK',
-  DECISION = 'DECISION',
-  PARALLEL = 'PARALLEL',
-}
+import { WorkflowStep } from './workflow-step.entity';
 
 export type TaskType = 'script' | 'http' | 'human';
 
@@ -44,23 +40,7 @@ export interface RetryConfig {
   initialInterval: number;
 }
 
-export interface Condition {
-  expression: string;
-  type: 'javascript' | 'jsonpath';
-}
-
-export interface WorkflowStep {
-  id: string;
-  name: string;
-  type: StepType;
-  dependencies: string[];
-  config: StepConfig;
-  retryConfig?: RetryConfig;
-  timeout?: number;
-  condition?: Condition;
-}
-
-@Entity()
+@Entity('workflow_definitions')
 export class WorkflowDefinition {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -71,7 +51,7 @@ export class WorkflowDefinition {
   @Column()
   description: string;
 
-  @Column('jsonb')
+  @OneToMany(() => WorkflowStep, step => step.workflowDefinition)
   steps: WorkflowStep[];
 
   @Column('jsonb', { nullable: true })

@@ -1,19 +1,13 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WorkflowInstance } from './entities/workflow-instance.entity';
-import { WorkflowStatus } from './enums/workflow-status.enum';
 import { StepStatus } from './enums/step-status.enum';
+import { WorkflowStatus } from './enums/workflow-status.enum';
 import { WorkflowService } from './workflow.service';
-import { StepType, WorkflowStep } from './entities/workflow-definition.entity';
-import { StepState, CompletedStep } from './interfaces/step-state.interface';
-
-enum TaskType {
-  HTTP = 'http',
-  SCRIPT = 'script',
-  CONDITION = 'condition',
-  DELAY = 'delay',
-}
+import { StepType } from './enums/step-type.enum';
+import { WorkflowStep } from './entities/workflow-step.entity';
+import { StepExecution } from './entities/step-execution.entity';
 
 interface TaskResult {
   success: boolean;
@@ -28,12 +22,14 @@ export class WorkflowExecutionService {
   constructor(
     @InjectRepository(WorkflowInstance)
     private workflowInstanceRepo: Repository<WorkflowInstance>,
+    @InjectRepository(WorkflowStep)
+    private workflowStepRepo: Repository<WorkflowStep>,
     private workflowService: WorkflowService,
-  ) {}
+  ) { }
 
   private validateWorkflowInput(schema: Record<string, any>, input: Record<string, any>): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     // Check required fields
     if (schema.required) {
       for (const requiredField of schema.required) {
@@ -98,6 +94,16 @@ export class WorkflowExecutionService {
       throw new Error(`Workflow definition ${workflowDefinitionId} not found`);
     }
 
+    // Load the workflow steps
+    const steps = await this.workflowStepRepo.find({
+      where: { workflowDefinitionId },
+      order: { key: 'ASC' },
+    });
+
+    if (!steps.length) {
+      throw new Error(`No steps found for workflow ${workflowDefinitionId}`);
+    }
+
     // Validate input against the workflow's input schema
     const validation = this.validateWorkflowInput(definition.inputSchema, input);
     if (!validation.isValid) {
@@ -117,8 +123,7 @@ export class WorkflowExecutionService {
       businessId,
       input,
       state: {
-        currentSteps: [],
-        completedSteps: [],
+        stepExecutions: [], // Will be populated during execution
         variables: { ...input },
       },
       output: {},
@@ -140,13 +145,19 @@ export class WorkflowExecutionService {
       throw new Error(`Workflow instance ${instanceId} not found`);
     }
 
+    // Load the workflow steps
+    const steps = await this.workflowStepRepo.find({
+      where: { workflowDefinitionId: instance.workflowDefinitionId },
+      order: { key: 'ASC' },
+    });
+
     instance.status = WorkflowStatus.RUNNING;
     instance.startedAt = new Date();
     await this.workflowInstanceRepo.save(instance);
 
     try {
-      const readySteps = this.findReadySteps(instance);
-      await this.executeSteps(instance, readySteps);
+      const readySteps = this.findReadySteps(instance, steps);
+      await this.executeSteps(instance, readySteps, steps);
     } catch (error) {
       this.logger.error(`Error executing workflow ${instanceId}:`, error);
       instance.status = WorkflowStatus.FAILED;
@@ -154,44 +165,54 @@ export class WorkflowExecutionService {
     }
   }
 
-  private findReadySteps(instance: WorkflowInstance): string[] {
-    const { steps } = instance.workflowDefinition;
-    const { completedSteps, currentSteps } = instance.state;
-
-    const completedStepIds = new Set(completedSteps.map((s) => s.stepId));
-    const runningStepIds = new Set(currentSteps.map((s) => s.stepId));
+  // Update the helper methods as well
+  private findReadySteps(instance: WorkflowInstance, steps: WorkflowStep[]): string[] {
+    const { stepExecutions } = instance.state;
+    const completedStepKeys = new Set(stepExecutions.map((s) => s.stepId));
 
     return steps
       .filter((step) => {
-        // Skip if step is already completed or running
-        if (completedStepIds.has(step.id) || runningStepIds.has(step.id)) {
+        // Skip if step is already completed
+        if (completedStepKeys.has(step.key)) {
           return false;
         }
 
         // Check if all dependencies are completed
-        return step.dependencies.every((depId) => completedStepIds.has(depId));
+        return step.dependencies.every((depKey) => completedStepKeys.has(depKey));
       })
-      .map((step) => step.id);
+      .map((step) => step.key);
   }
 
   private async executeSteps(
     instance: WorkflowInstance,
-    stepIds: string[],
+    stepKeys: string[],
+    allSteps: WorkflowStep[],
   ): Promise<void> {
-    const steps = stepIds.map((id) =>
-      instance.workflowDefinition.steps.find((s) => s.id === id),
-    );
+    const steps = stepKeys.map((key) =>
+      allSteps.find((s) => s.key === key),
+    ).filter(Boolean);
 
     for (const step of steps) {
       try {
-        // Add step to current steps
-        const stepState = this.createStepState(step);
-        instance.state.currentSteps.push(stepState);
+        // Create step execution record
+        const stepExecution = {
+          stepId: step.key,
+          step: step,
+          status: StepStatus.RUNNING,
+          startTime: new Date(),
+          attempts: 1,
+          output: {},
+        } as StepExecution;
+
+        // Add step to current executions
+        instance.state.stepExecutions.push(stepExecution);
         await this.workflowInstanceRepo.save(instance);
 
         // For human tasks, we just mark them as pending and continue
         if (step.config?.type === 'human') {
-          this.logger.log(`Human task ${step.id} waiting for user action`);
+          this.logger.log(`Human task ${step.key} waiting for user action`);
+          stepExecution.status = StepStatus.PENDING;
+          await this.workflowInstanceRepo.save(instance);
           continue;
         }
 
@@ -200,7 +221,10 @@ export class WorkflowExecutionService {
         if (step.type === StepType.TASK) {
           switch (step.config?.type) {
             case 'script':
-              result = await this.executeScriptTask(step.config, instance.state.variables);
+              result = await this.executeScriptTask(
+                step.config,
+                instance.state.variables
+              );
               break;
             case 'http':
               result = await this.executeHttpTask(step.config);
@@ -213,52 +237,53 @@ export class WorkflowExecutionService {
         }
 
         if (result.success) {
-          // Update step status and move to completed
-          const currentStep = instance.state.currentSteps.find(s => s.stepId === step.id);
-          if (currentStep) {
-            currentStep.status = StepStatus.COMPLETED;
-            currentStep.output = result.output;
-            currentStep.endTime = new Date();
+          // Update step execution status
+          stepExecution.status = StepStatus.COMPLETED;
+          stepExecution.output = result.output;
+          stepExecution.endTime = new Date();
 
-            // Move to completed steps
-            instance.state.completedSteps.push({
-              ...currentStep,
-              endTime: currentStep.endTime || new Date(),
-              output: currentStep.output || {},
-            });
-            instance.state.currentSteps = instance.state.currentSteps.filter(
-              s => s.stepId !== step.id
-            );
+          // Update variables with step output using output mapping
+          if (step.config?.outputMapping) {
+            for (const [key, path] of Object.entries(step.config.outputMapping)) {
+              instance.state.variables[key] = result.output[path];
+            }
           }
+        } else {
+          stepExecution.status = StepStatus.FAILED;
+          stepExecution.error = result.error;
+          stepExecution.endTime = new Date();
+          throw new Error(`Step ${step.key} failed: ${result.error}`);
         }
 
         await this.workflowInstanceRepo.save(instance);
 
         // Check if workflow is complete
-        if (this.isWorkflowComplete(instance)) {
+        if (this.isWorkflowComplete(instance, allSteps)) {
           instance.status = WorkflowStatus.COMPLETED;
           instance.completedAt = new Date();
           instance.output = this.generateWorkflowOutput(instance);
           await this.workflowInstanceRepo.save(instance);
         }
       } catch (error) {
-        this.logger.error(`Error executing step ${step.id}:`, error);
+        this.logger.error(`Error executing step ${step.key}:`, error);
         throw error;
       }
     }
   }
 
-  private createStepState(step: WorkflowStep): StepState {
-    return {
-      stepId: step.id,
-      status: StepStatus.PENDING,
-      startTime: new Date(),
-      attempts: 0,
-      name: step.name,
-      type: step.type,
-      config: step.config,
-      dependencies: step.dependencies,
-    };
+  // Update isWorkflowComplete method as well
+  private isWorkflowComplete(instance: WorkflowInstance, steps: WorkflowStep[]): boolean {
+    const completedSteps = new Set(
+      instance.state.stepExecutions
+        .filter((s) => s.status === StepStatus.COMPLETED)
+        .map((s) => s.stepId)
+    );
+
+    // All steps should be either completed or in a final state
+    return steps.every((step) => {
+      const execution = instance.state.stepExecutions.find((s) => s.stepId === step.key);
+      return execution && [StepStatus.COMPLETED, StepStatus.FAILED, StepStatus.CANCELLED].includes(execution.status);
+    });
   }
 
   private async executeHttpTask(config: any): Promise<TaskResult> {
@@ -311,17 +336,12 @@ export class WorkflowExecutionService {
     }
   }
 
-  private isWorkflowComplete(instance: WorkflowInstance): boolean {
-    const totalSteps = instance.workflowDefinition.steps.length;
-    return instance.state.completedSteps.length === totalSteps;
-  }
-
   private generateWorkflowOutput(
     instance: WorkflowInstance,
   ): Record<string, any> {
     // Find the last step that generates output
     const lastStep =
-      instance.state.completedSteps[instance.state.completedSteps.length - 1];
+      instance.state.stepExecutions[instance.state.stepExecutions.length - 1];
     if (lastStep && lastStep.output) {
       return lastStep.output;
     }
@@ -341,35 +361,95 @@ export class WorkflowExecutionService {
     return await this.workflowInstanceRepo.save(instance);
   }
 
-  async resumeWorkflow(instanceId: string): Promise<WorkflowInstance> {
+  // async resumeWorkflow(instanceId: string): Promise<WorkflowInstance> {
+  //   const instance = await this.workflowInstanceRepo.findOne({
+  //     where: { id: instanceId },
+  //   });
+
+  //   if (!instance) {
+  //     throw new Error(`Workflow instance ${instanceId} not found`);
+  //   }
+
+  //   instance.status = WorkflowStatus.RUNNING;
+  //   await this.workflowInstanceRepo.save(instance);
+
+  //   // Continue execution
+  //   const readySteps = this.findReadySteps(instance);
+  //   await this.executeSteps(instance, readySteps);
+
+  //   return instance;
+  // }
+
+  // async cancelWorkflow(instanceId: string): Promise<WorkflowInstance> {
+  //   const instance = await this.workflowInstanceRepo.findOne({
+  //     where: { id: instanceId },
+  //   });
+
+  //   if (!instance) {
+  //     throw new Error(`Workflow instance ${instanceId} not found`);
+  //   }
+
+  //   instance.status = WorkflowStatus.CANCELLED;
+  //   return await this.workflowInstanceRepo.save(instance);
+  // }
+
+  async completeHumanTask(
+    instanceId: string,
+    stepKey: string,
+    output: Record<string, any>,
+  ): Promise<WorkflowInstance> {
     const instance = await this.workflowInstanceRepo.findOne({
       where: { id: instanceId },
+      relations: ['workflowDefinition'],
     });
 
     if (!instance) {
-      throw new Error(`Workflow instance ${instanceId} not found`);
+      throw new NotFoundException(`Workflow instance ${instanceId} not found`);
     }
 
-    instance.status = WorkflowStatus.RUNNING;
+    // Find the step execution
+    const stepExecution = instance.state.stepExecutions.find(
+      (s) => s.stepId === stepKey && s.status === StepStatus.PENDING,
+    );
+
+    if (!stepExecution) {
+      throw new BadRequestException(`No pending human task found for step ${stepKey}`);
+    }
+
+    // Update step execution
+    stepExecution.status = StepStatus.COMPLETED;
+    stepExecution.output = output;
+    stepExecution.endTime = new Date();
+
+    // Update workflow variables if output mapping exists
+    const step = await this.workflowStepRepo.findOne({
+      where: { key: stepKey },
+    });
+
+    if (step?.config?.outputMapping) {
+      for (const [key, path] of Object.entries(step.config.outputMapping)) {
+        instance.state.variables[key] = output[path];
+      }
+    }
+
     await this.workflowInstanceRepo.save(instance);
 
-    // Continue execution
-    const readySteps = this.findReadySteps(instance);
-    await this.executeSteps(instance, readySteps);
-
-    return instance;
-  }
-
-  async cancelWorkflow(instanceId: string): Promise<WorkflowInstance> {
-    const instance = await this.workflowInstanceRepo.findOne({
-      where: { id: instanceId },
+    // Continue workflow execution if there are more steps
+    const steps = await this.workflowStepRepo.find({
+      where: { workflowDefinitionId: instance.workflowDefinitionId },
+      order: { key: 'ASC' },
     });
 
-    if (!instance) {
-      throw new Error(`Workflow instance ${instanceId} not found`);
+    const readySteps = this.findReadySteps(instance, steps);
+    if (readySteps.length > 0) {
+      await this.executeSteps(instance, readySteps, steps);
+    } else if (this.isWorkflowComplete(instance, steps)) {
+      instance.status = WorkflowStatus.COMPLETED;
+      instance.completedAt = new Date();
+      instance.output = this.generateWorkflowOutput(instance);
+      await this.workflowInstanceRepo.save(instance);
     }
 
-    instance.status = WorkflowStatus.CANCELLED;
-    return await this.workflowInstanceRepo.save(instance);
+    return instance;
   }
 }

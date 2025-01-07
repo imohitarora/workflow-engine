@@ -1,46 +1,15 @@
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { WorkflowDefinition } from './workflow-definition.entity';
 import { WorkflowStatus } from '../enums/workflow-status.enum';
-import { StepStatus } from '../enums/step-status.enum';
-
-interface StepBase {
-  stepId: string;
-  name: string;
-  type: string;
-  status: StepStatus;
-  startTime: Date;
-  error?: string;
-  dependencies: string[];
-  attempts: number;
-}
-
-interface CurrentStep extends StepBase {
-  endTime?: Date;
-  output?: any;
-  config?: {
-    type: string;
-    [key: string]: any;
-  };
-}
-
-interface CompletedStep extends StepBase {
-  endTime: Date;
-  output: any;
-}
-
-interface WorkflowState {
-  currentSteps: CurrentStep[];
-  completedSteps: CompletedStep[];
-  variables: Record<string, any>;
-}
+import { WorkflowDefinition } from './workflow-definition.entity';
+import { WorkflowState } from './workflow-state.entity';
 
 @Entity('workflow_instances')
 export class WorkflowInstance {

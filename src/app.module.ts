@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TasksModule } from './tasks/tasks.module';
 import { WorkflowModule } from './workflow/workflow.module';
 
 @Module({
@@ -18,9 +17,8 @@ import { WorkflowModule } from './workflow/workflow.module';
       synchronize: true,
     }),
     WorkflowModule,
-    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
