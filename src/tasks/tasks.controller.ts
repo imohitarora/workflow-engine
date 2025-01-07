@@ -52,7 +52,6 @@ export class TasksController {
     @Param('id') id: string,
     @Body() completeTaskDto: CompleteTaskDto,
   ): Promise<void> {
-    console.log('completeTaskDto', completeTaskDto, id);
     await this.tasksService.completeTask(id, completeTaskDto.formData);
   }
 
@@ -65,6 +64,6 @@ export class TasksController {
     @Param('id') id: string,
     @Body() rejectTaskDto: RejectTaskDto,
   ): Promise<void> {
-    await this.tasksService.rejectTask(id, rejectTaskDto.formData);
+    await this.tasksService.rejectTask(id, rejectTaskDto.comments);
   }
 }

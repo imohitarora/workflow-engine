@@ -1,10 +1,9 @@
+// src/tasks/dto/reject-task.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
+import { IsString } from 'class-validator';
 
 export class RejectTaskDto {
-  @ApiProperty({ 
-    type: 'object', 
-    additionalProperties: true,
-    description: 'Form data submitted by user'
-  })
-  formData: Record<string, any>;
+  @ApiProperty()
+  @IsString()
+  comments: string;
 }

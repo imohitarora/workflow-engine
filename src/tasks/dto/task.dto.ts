@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StepStatus } from '../../workflow/enums/step-status.enum';
 import { IsString, IsEnum, IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { TaskStatus } from '../enums/task-status.enum';
 
 export class TaskFormFieldDto {
   @ApiProperty()
@@ -77,39 +78,38 @@ export class TaskDto {
   @IsString()
   stepId: string;
 
-  @ApiProperty({ 
-    enum: StepStatus, 
-    description: 'Current status of the task' 
+  @ApiProperty({
+    enum: TaskStatus,
+    description: 'Current status of the task'
   })
-  @IsEnum(StepStatus)
-  status: StepStatus;
+  @IsEnum(TaskStatus)
+  status: TaskStatus;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     type: TaskFormDto,
-    description: 'Form configuration if task requires user input' 
+    description: 'Form configuration if task requires user input'
   })
   @IsOptional()
   @ValidateNested()
   @Type(() => TaskFormDto)
   form?: TaskFormDto;
 
+  @ApiPropertyOptional()
+  formData?: Record<string, any>;
+
   @ApiPropertyOptional({ description: 'Error message if task failed' })
   @IsOptional()
   @IsString()
   error?: string;
-}
 
-export class CompleteTaskDto {
-  @ApiProperty({ 
-    type: 'object', 
-    additionalProperties: true,
-    description: 'Form data submitted by user'
-  })
-  formData: Record<string, any>;
-}
-
-export class RejectTaskDto {
-  @ApiProperty({ description: 'Reason for rejecting the task' })
+  @ApiPropertyOptional({ description: 'Comments by user' })
+  @IsOptional()
   @IsString()
-  reason: string;
+  comments?: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
 }

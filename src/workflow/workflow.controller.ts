@@ -1,14 +1,10 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   NotFoundException,
   Param,
-  Patch,
-  Post,
+  Post
 } from '@nestjs/common';
 import {
   ApiBody,
@@ -19,14 +15,10 @@ import {
 } from '@nestjs/swagger';
 import { CreateWorkflowDefinitionDto } from './dto/create-workflow-definition.dto';
 import { StartWorkflowDto } from './dto/start-workflow.dto';
-import { UpdateWorkflowDefinitionDto } from './dto/update-workflow-definition.dto';
 import { WorkflowDefinition } from './entities/workflow-definition.entity';
 import { WorkflowInstance } from './entities/workflow-instance.entity';
 import { WorkflowExecutionService } from './workflow-execution.service';
 import { WorkflowService } from './workflow.service';
-import { TaskDto } from '../tasks/dto/task.dto';
-import { CompleteTaskDto } from '../tasks/dto/complete-task.dto';
-import { RejectTaskDto } from '../tasks/dto/reject-task.dto';
 
 @ApiTags('workflows')
 @Controller('workflows')
@@ -34,7 +26,7 @@ export class WorkflowController {
   constructor(
     private readonly workflowService: WorkflowService,
     private readonly workflowExecutionService: WorkflowExecutionService,
-  ) {}
+  ) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow definition' })
@@ -438,107 +430,130 @@ export class WorkflowController {
     return this.workflowService.findAll();
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a workflow definition by id' })
-  @ApiParam({ name: 'id', description: 'Workflow definition ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The workflow definition has been found',
-    type: WorkflowDefinition,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Workflow definition not found',
-  })
-  findOne(@Param('id') id: string) {
-    return this.workflowService.findOne(id);
-  }
+  // @Get(':id')
+  // @ApiOperation({ summary: 'Get a workflow definition by id' })
+  // @ApiParam({ name: 'id', description: 'Workflow definition ID' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'The workflow definition has been found',
+  //   type: WorkflowDefinition,
+  // })
+  // @ApiResponse({
+  //   status: 404,
+  //   description: 'Workflow definition not found',
+  // })
+  // findOne(@Param('id') id: string) {
+  //   return this.workflowService.findOne(id);
+  // }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a workflow definition' })
-  @ApiParam({ name: 'id', description: 'Workflow definition ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The workflow definition has been updated',
-    type: WorkflowDefinition,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Workflow definition not found',
-  })
-  @ApiBody({
-    description: 'Workflow definition update payload',
-    examples: {
-      updateSteps: {
-        summary: 'Update workflow steps',
-        value: {
-          steps: [
-            {
-              id: 'send-email',
-              name: 'Send Email Notification',
-              type: 'TASK',
-              dependencies: [],
-              config: {
-                handler: 'newEmailHandler',
-                inputMapping: {
-                  to: '$.input.email',
-                  template: '$.input.templateId',
-                },
-                outputMapping: {
-                  sent: '$.output.success',
-                },
-              },
-            },
-          ],
-        },
-      },
-      updateDescription: {
-        summary: 'Update workflow description',
-        value: {
-          description: 'Updated workflow description with new functionality',
-        },
-      },
-    },
-  })
-  update(
-    @Param('id') id: string,
-    @Body() updateWorkflowDto: UpdateWorkflowDefinitionDto,
-  ) {
-    return this.workflowService.update(id, updateWorkflowDto);
-  }
+  // @Patch(':id')
+  // @ApiOperation({ summary: 'Update a workflow definition' })
+  // @ApiParam({ name: 'id', description: 'Workflow definition ID' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'The workflow definition has been updated',
+  //   type: WorkflowDefinition,
+  // })
+  // @ApiResponse({
+  //   status: 404,
+  //   description: 'Workflow definition not found',
+  // })
+  // @ApiBody({
+  //   description: 'Workflow definition update payload',
+  //   examples: {
+  //     updateSteps: {
+  //       summary: 'Update workflow steps',
+  //       value: {
+  //         steps: [
+  //           {
+  //             id: 'send-email',
+  //             name: 'Send Email Notification',
+  //             type: 'TASK',
+  //             dependencies: [],
+  //             config: {
+  //               handler: 'newEmailHandler',
+  //               inputMapping: {
+  //                 to: '$.input.email',
+  //                 template: '$.input.templateId',
+  //               },
+  //               outputMapping: {
+  //                 sent: '$.output.success',
+  //               },
+  //             },
+  //           },
+  //         ],
+  //       },
+  //     },
+  //     updateDescription: {
+  //       summary: 'Update workflow description',
+  //       value: {
+  //         description: 'Updated workflow description with new functionality',
+  //       },
+  //     },
+  //   },
+  // })
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() updateWorkflowDto: UpdateWorkflowDefinitionDto,
+  // ) {
+  //   return this.workflowService.update(id, updateWorkflowDto);
+  // }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Delete a workflow definition' })
-  @ApiParam({ name: 'id', description: 'Workflow definition ID' })
-  @ApiResponse({
-    status: 204,
-    description: 'The workflow definition has been deleted',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Workflow definition not found',
-  })
-  @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id') id: string) {
-    return this.workflowService.remove(id);
-  }
+  // @Delete(':id')
+  // @ApiOperation({ summary: 'Delete a workflow definition' })
+  // @ApiParam({ name: 'id', description: 'Workflow definition ID' })
+  // @ApiResponse({
+  //   status: 204,
+  //   description: 'The workflow definition has been deleted',
+  // })
+  // @ApiResponse({
+  //   status: 404,
+  //   description: 'Workflow definition not found',
+  // })
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // remove(@Param('id') id: string) {
+  //   return this.workflowService.remove(id);
+  // }
 
-  @Post(':id/execute')
-  @ApiOperation({ summary: 'Execute a workflow definition' })
+  @Post('start')
+  @ApiOperation({ summary: 'Start a new workflow instance' })
   @ApiResponse({
     status: 201,
     description: 'The workflow instance has been created successfully.',
     type: WorkflowInstance,
   })
-  async executeWorkflow(
-    @Param('id') id: string,
+  async startWorkflow(
     @Body() startWorkflowDto: StartWorkflowDto,
   ): Promise<WorkflowInstance> {
     return this.workflowExecutionService.startWorkflow(
-      id,
+      startWorkflowDto.workflowDefinitionId,
       startWorkflowDto.businessId,
       startWorkflowDto.input,
     );
+  }
+
+  @Get('instances')
+  @ApiOperation({ summary: 'Get all workflow instances' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all workflow instances',
+    type: [WorkflowInstance],
+  })
+  async getWorkflowInstances(): Promise<WorkflowInstance[]> {
+    return this.workflowService.findAllInstances();
+  }
+
+  @Get('instances/:businessId')
+  @ApiOperation({ summary: 'Get workflow instances by business ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of workflow instances for the specified business ID',
+    type: [WorkflowInstance],
+  })
+  async getWorkflowInstancesByBusinessId(
+    @Param('businessId') businessId: string,
+  ): Promise<WorkflowInstance[]> {
+    return this.workflowService.findInstancesByBusinessId(businessId);
   }
 
   @Get('instances/:id')
@@ -560,23 +575,6 @@ export class WorkflowController {
       throw new NotFoundException(`Workflow instance ${id} not found`);
     }
     return instance;
-  }
-
-  @Post('start')
-  @ApiOperation({ summary: 'Start a new workflow instance' })
-  @ApiResponse({
-    status: 201,
-    description: 'The workflow instance has been created successfully.',
-    type: WorkflowInstance,
-  })
-  async startWorkflow(
-    @Body() startWorkflowDto: StartWorkflowDto,
-  ): Promise<WorkflowInstance> {
-    return this.workflowExecutionService.startWorkflow(
-      startWorkflowDto.workflowDefinitionId,
-      startWorkflowDto.businessId,
-      startWorkflowDto.input,
-    );
   }
 
   @Post(':instanceId/pause')

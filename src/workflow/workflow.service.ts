@@ -102,6 +102,13 @@ export class WorkflowService {
     });
   }
 
+  async findInstancesByBusinessId(businessId: string): Promise<WorkflowInstance[]> {
+    return this.workflowInstanceRepo.find({
+      where: { businessId },
+      relations: ['workflowDefinition'],
+    });
+  }
+
   async findInstancesByStatus(status: WorkflowStatus): Promise<WorkflowInstance[]> {
     return this.workflowInstanceRepo.find({
       where: { status },
@@ -205,8 +212,8 @@ export class WorkflowService {
     instance.state.completedSteps.push(completedStep);
 
     // Update workflow status if all steps are completed
-    if (instance.state.currentSteps.length === 0 && 
-        instance.state.completedSteps.length === instance.workflowDefinition.steps.length) {
+    if (instance.state.currentSteps.length === 0 &&
+      instance.state.completedSteps.length === instance.workflowDefinition.steps.length) {
       instance.status = WorkflowStatus.COMPLETED;
       instance.output = formData;
     }

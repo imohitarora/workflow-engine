@@ -122,7 +122,7 @@ export class WorkflowExecutionService {
         variables: { ...input },
       },
       output: {},
-      status: WorkflowStatus.PENDING,
+      status: WorkflowStatus.RUNNING,
     });
 
     const savedInstance = await this.workflowInstanceRepo.save(instance);

@@ -30,7 +30,7 @@ describe('Workflow E2E Test', () => {
         password: 'postgres',
         database: 'workflow_engine_test',
         schema: 'public',
-        entities: [WorkflowDefinition, WorkflowInstance],
+        autoLoadEntities: true,
         synchronize: true,
       }))
       .compile();
