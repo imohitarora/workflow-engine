@@ -4,7 +4,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from '../src/app.controller';
 import { AppService } from '../src/app.service';
-import { TasksModule } from '../src/tasks/tasks.module';
 import { WorkflowModule } from '../src/workflow/workflow.module';
 
 let app: INestApplication;
@@ -25,7 +24,6 @@ beforeAll(async () => {
         dropSchema: true, // Cleans database before tests
       }),
       WorkflowModule,
-      TasksModule,
     ],
     controllers: [AppController],
     providers: [AppService],

@@ -18,7 +18,12 @@ export class StepConfigDto {
 
   @ApiProperty({ description: 'Handler for the task' })
   @IsString()
-  handler: string;
+  @IsOptional()
+  handler?: string;
+
+  @IsString()
+  @IsOptional()
+  script?: string;
 
   @ApiProperty({ description: 'Input mapping for the task' })
   @IsObject()

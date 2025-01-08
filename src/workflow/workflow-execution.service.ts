@@ -8,6 +8,8 @@ import { WorkflowService } from './workflow.service';
 import { StepType } from './enums/step-type.enum';
 import { WorkflowStep } from './entities/workflow-step.entity';
 import { StepExecution } from './entities/step-execution.entity';
+import { get } from 'lodash';
+import { WorkflowState } from './entities/workflow-state.entity';
 
 interface TaskResult {
   success: boolean;
@@ -24,6 +26,8 @@ export class WorkflowExecutionService {
     private workflowInstanceRepo: Repository<WorkflowInstance>,
     @InjectRepository(WorkflowStep)
     private workflowStepRepo: Repository<WorkflowStep>,
+    @InjectRepository(WorkflowState)
+    private workflowStateRepo: Repository<WorkflowState>,
     private workflowService: WorkflowService,
   ) { }
 
@@ -145,7 +149,18 @@ export class WorkflowExecutionService {
       throw new Error(`Workflow instance ${instanceId} not found`);
     }
 
-    // Load the workflow steps
+    // Initialize state if it doesn't exist
+    if (!instance.state) {
+      const state = this.workflowStateRepo.create({
+        stepExecutions: [],
+        variables: { ...instance.input }
+      });
+
+      const savedState = await this.workflowStateRepo.save(state);
+      instance.state = savedState;
+      await this.workflowInstanceRepo.save(instance);
+    }
+
     const steps = await this.workflowStepRepo.find({
       where: { workflowDefinitionId: instance.workflowDefinitionId },
       order: { key: 'ASC' },
@@ -156,12 +171,20 @@ export class WorkflowExecutionService {
     await this.workflowInstanceRepo.save(instance);
 
     try {
-      const readySteps = this.findReadySteps(instance, steps);
-      await this.executeSteps(instance, readySteps, steps);
+      await this.continueWorkflowExecution(instance, steps);
     } catch (error) {
       this.logger.error(`Error executing workflow ${instanceId}:`, error);
       instance.status = WorkflowStatus.FAILED;
       await this.workflowInstanceRepo.save(instance);
+    }
+  }
+
+  private async continueWorkflowExecution(instance: WorkflowInstance, steps: WorkflowStep[]): Promise<void> {
+    const readySteps = this.findReadySteps(instance, steps);
+    if (readySteps.length > 0) {
+      await this.executeSteps(instance, readySteps, steps);
+      // Recursively continue execution for any new ready steps
+      await this.continueWorkflowExecution(instance, steps);
     }
   }
 
@@ -188,9 +211,9 @@ export class WorkflowExecutionService {
     stepKeys: string[],
     allSteps: WorkflowStep[],
   ): Promise<void> {
-    const steps = stepKeys.map((key) =>
-      allSteps.find((s) => s.key === key),
-    ).filter(Boolean);
+    const steps = stepKeys
+      .map((key) => allSteps.find((s) => s.key === key))
+      .filter(Boolean);
 
     for (const step of steps) {
       try {
@@ -203,6 +226,11 @@ export class WorkflowExecutionService {
           attempts: 1,
           output: {},
         } as StepExecution;
+
+        // Ensure state.stepExecutions exists
+        if (!instance.state.stepExecutions) {
+          instance.state.stepExecutions = [];
+        }
 
         // Add step to current executions
         instance.state.stepExecutions.push(stepExecution);
@@ -305,20 +333,31 @@ export class WorkflowExecutionService {
     }
   }
 
+  // In src/workflow/workflow-execution.service.ts
+
   private async executeScriptTask(
     config: any,
     variables: Record<string, any>,
   ): Promise<TaskResult> {
-    const { script } = config;
+    const { script, inputMapping } = config;
     try {
-      // Create a safe context with variables
+      // Map input variables according to inputMapping
+      const input: Record<string, any> = {};
+      for (const [key, path] of Object.entries(inputMapping)) {
+        if (typeof path === 'string') {
+          // Remove the '$.' prefix if present
+          const cleanPath = path.replace(/^\$\./, '');
+          input[key] = get(variables, cleanPath);
+        }
+      }
+
+      // Create a safe context with mapped input
       const context = {
-        ...variables,
-        // Add helper functions if needed
+        input,
         JSON: JSON,
       };
 
-      const result = new Function(
+      const scriptResult = new Function(
         'context',
         `
         with (context) {
@@ -329,7 +368,9 @@ export class WorkflowExecutionService {
 
       return {
         success: true,
-        output: result,
+        output: {
+          result: scriptResult
+        },
       };
     } catch (error) {
       throw new Error(`Script execution failed: ${error.message}`);
@@ -408,9 +449,7 @@ export class WorkflowExecutionService {
     }
 
     // Find the step execution
-    const stepExecution = instance.state.stepExecutions.find(
-      (s) => s.stepId === stepKey && s.status === StepStatus.PENDING,
-    );
+    const stepExecution = instance.state.stepExecutions.find((s) => s.stepId === stepKey && s.status === StepStatus.PENDING);
 
     if (!stepExecution) {
       throw new BadRequestException(`No pending human task found for step ${stepKey}`);

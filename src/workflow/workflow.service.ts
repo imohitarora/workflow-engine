@@ -245,4 +245,13 @@ export class WorkflowService {
 
     await this.workflowInstanceRepo.save(instance);
   }
+
+  async findInstancesByDefinitionId(
+    definitionId: string,
+  ): Promise<WorkflowInstance[]> {
+    return this.workflowInstanceRepo.find({
+      where: { workflowDefinitionId: definitionId },
+      relations: ['workflowDefinition'],
+    });
+  }
 }

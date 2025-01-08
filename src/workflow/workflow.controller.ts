@@ -232,19 +232,6 @@ export class WorkflowController {
     return this.workflowService.findAllInstances();
   }
 
-  @Get('instances/:businessId')
-  @ApiOperation({ summary: 'Get workflow instances by business ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of workflow instances for the specified business ID',
-    type: [WorkflowInstance],
-  })
-  async getWorkflowInstancesByBusinessId(
-    @Param('businessId') businessId: string,
-  ): Promise<WorkflowInstance[]> {
-    return this.workflowService.findInstancesByBusinessId(businessId);
-  }
-
   @Get('instances/:id')
   @ApiOperation({ summary: 'Get workflow instance details' })
   @ApiResponse({
