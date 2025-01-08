@@ -14,7 +14,7 @@ export class WorkflowStep {
   @Column()
   name: string;
 
-  @ManyToOne(() => WorkflowDefinition, definition => definition.steps)
+  @ManyToOne(() => WorkflowDefinition, (definition) => definition.steps)
   workflowDefinition: WorkflowDefinition;
 
   @Column('uuid')

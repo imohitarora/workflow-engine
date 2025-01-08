@@ -25,7 +25,7 @@ export class WorkflowService {
     private workflowInstanceRepo: Repository<WorkflowInstance>,
     @InjectRepository(WorkflowStep)
     private workflowStepRepo: Repository<WorkflowStep>,
-  ) { }
+  ) {}
 
   async create(
     createDto: CreateWorkflowDefinitionDto,
@@ -39,7 +39,8 @@ export class WorkflowService {
     });
 
     // Save the workflow definition first to get its ID
-    const savedWorkflow = await this.workflowDefinitionRepo.save(workflowDefinition);
+    const savedWorkflow =
+      await this.workflowDefinitionRepo.save(workflowDefinition);
 
     // Create the steps with the workflow definition reference
     const steps = createDto.steps.map((stepDto) => ({
@@ -49,9 +50,9 @@ export class WorkflowService {
       dependencies: stepDto.dependencies || [],
       config: stepDto.config
         ? {
-          ...stepDto.config,
-          type: stepDto.config.type as 'human' | 'script' | 'http',
-        }
+            ...stepDto.config,
+            type: stepDto.config.type as 'human' | 'script' | 'http',
+          }
         : undefined,
       workflowDefinitionId: savedWorkflow.id,
       workflowDefinition: savedWorkflow,
@@ -144,7 +145,9 @@ export class WorkflowService {
   async approveInstanceStep(instanceId: string, stepId: string): Promise<void> {
     const instance = await this.getInstance(instanceId);
 
-    const step = instance.state.stepExecutions?.find((s) => s.stepId === stepId);
+    const step = instance.state.stepExecutions?.find(
+      (s) => s.stepId === stepId,
+    );
     if (step) {
       const completedStep = {
         ...step,
@@ -237,7 +240,7 @@ export class WorkflowService {
     if (
       instance.state.stepExecutions.length === 0 &&
       instance.workflowDefinition.steps.length ===
-      instance.state.stepExecutions.length
+        instance.state.stepExecutions.length
     ) {
       instance.status = WorkflowStatus.COMPLETED;
       instance.output = formData;

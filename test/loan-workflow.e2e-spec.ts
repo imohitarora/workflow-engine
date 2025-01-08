@@ -12,10 +12,6 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
   let app: INestApplication;
   let workflowId: string;
   let workflowInstanceId: string;
-  let initialReviewTaskId: string;
-  let creditCheckTaskId: string;
-  let riskAssessmentTaskId: string;
-  let finalApprovalTaskId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -243,7 +239,7 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
 
   it('should complete credit check', async () => {
     // Since credit-check is a script task, we need to wait for it to complete automatically
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for automatic execution
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Give time for automatic execution
 
     console.log('Waiting for credit check to complete...', workflowInstanceId);
 
@@ -266,7 +262,10 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
       recommendedLoanTerm: 24,
     };
 
-    console.log('Waiting for risk assessment to complete...', workflowInstanceId);
+    console.log(
+      'Waiting for risk assessment to complete...',
+      workflowInstanceId,
+    );
 
     const response = await request(app.getHttpServer())
       .post(`/workflows/${workflowInstanceId}/steps/risk-assessment/complete`)
@@ -329,7 +328,9 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
 
     // Complete initial review
     const initialReviewResponse = await request(app.getHttpServer())
-      .post(`/workflows/${rejectedWorkflowInstanceId}/steps/initial-review/complete`)
+      .post(
+        `/workflows/${rejectedWorkflowInstanceId}/steps/initial-review/complete`,
+      )
       .send({
         initialApproval: true,
         comments: 'Proceed with caution due to high loan amount',
@@ -337,8 +338,8 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
       .expect(201);
     console.log('Initial review response:', initialReviewResponse.body);
 
-    // Complete credit check    
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for automatic execution
+    // Complete credit check
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // Give time for automatic execution
     console.log('Waiting for credit check to complete...', workflowInstanceId);
     const creditCheckresponse = await request(app.getHttpServer())
       .get(`/workflows/instances/${rejectedWorkflowInstanceId}`)
@@ -353,7 +354,9 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
 
     // Complete risk assessment
     const riskAssessmentResponse = await request(app.getHttpServer())
-      .post(`/workflows/${rejectedWorkflowInstanceId}/steps/risk-assessment/complete`)
+      .post(
+        `/workflows/${rejectedWorkflowInstanceId}/steps/risk-assessment/complete`,
+      )
       .send({
         riskLevel: 'High',
         adjustedInterestRate: 11.0,
@@ -364,7 +367,9 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
 
     // Complete final approval (rejection)
     const rejectResponse = await request(app.getHttpServer())
-      .post(`/workflows/${rejectedWorkflowInstanceId}/steps/final-approval/complete`)
+      .post(
+        `/workflows/${rejectedWorkflowInstanceId}/steps/final-approval/complete`,
+      )
       .send({
         approved: false,
         interestRate: null,

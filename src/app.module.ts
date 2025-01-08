@@ -21,4 +21,4 @@ import { WorkflowModule } from './workflow/workflow.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -5,7 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  VersionColumn
+  VersionColumn,
 } from 'typeorm';
 import { WorkflowStep } from './workflow-step.entity';
 
@@ -51,7 +51,7 @@ export class WorkflowDefinition {
   @Column()
   description: string;
 
-  @OneToMany(() => WorkflowStep, step => step.workflowDefinition)
+  @OneToMany(() => WorkflowStep, (step) => step.workflowDefinition)
   steps: WorkflowStep[];
 
   @Column('jsonb', { nullable: true })

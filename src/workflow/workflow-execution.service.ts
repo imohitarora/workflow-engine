@@ -1,15 +1,20 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { get } from 'lodash';
 import { Repository } from 'typeorm';
+import { StepExecution } from './entities/step-execution.entity';
 import { WorkflowInstance } from './entities/workflow-instance.entity';
+import { WorkflowState } from './entities/workflow-state.entity';
+import { WorkflowStep } from './entities/workflow-step.entity';
 import { StepStatus } from './enums/step-status.enum';
+import { StepType } from './enums/step-type.enum';
 import { WorkflowStatus } from './enums/workflow-status.enum';
 import { WorkflowService } from './workflow.service';
-import { StepType } from './enums/step-type.enum';
-import { WorkflowStep } from './entities/workflow-step.entity';
-import { StepExecution } from './entities/step-execution.entity';
-import { get } from 'lodash';
-import { WorkflowState } from './entities/workflow-state.entity';
 
 interface TaskResult {
   success: boolean;
@@ -29,9 +34,12 @@ export class WorkflowExecutionService {
     @InjectRepository(WorkflowState)
     private workflowStateRepo: Repository<WorkflowState>,
     private workflowService: WorkflowService,
-  ) { }
+  ) {}
 
-  private validateWorkflowInput(schema: Record<string, any>, input: Record<string, any>): { isValid: boolean; errors: string[] } {
+  private validateWorkflowInput(
+    schema: Record<string, any>,
+    input: Record<string, any>,
+  ): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
     // Check required fields
@@ -72,7 +80,11 @@ export class WorkflowExecutionService {
               }
               break;
             case 'object':
-              if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+              if (
+                typeof value !== 'object' ||
+                value === null ||
+                Array.isArray(value)
+              ) {
                 errors.push(`Field ${field} must be an object`);
               }
               break;
@@ -109,7 +121,10 @@ export class WorkflowExecutionService {
     }
 
     // Validate input against the workflow's input schema
-    const validation = this.validateWorkflowInput(definition.inputSchema, input);
+    const validation = this.validateWorkflowInput(
+      definition.inputSchema,
+      input,
+    );
     if (!validation.isValid) {
       throw new BadRequestException({
         message: 'Invalid workflow input',
@@ -153,7 +168,7 @@ export class WorkflowExecutionService {
     if (!instance.state) {
       const state = this.workflowStateRepo.create({
         stepExecutions: [],
-        variables: { ...instance.input }
+        variables: { ...instance.input },
       });
 
       const savedState = await this.workflowStateRepo.save(state);
@@ -179,7 +194,10 @@ export class WorkflowExecutionService {
     }
   }
 
-  private async continueWorkflowExecution(instance: WorkflowInstance, steps: WorkflowStep[]): Promise<void> {
+  private async continueWorkflowExecution(
+    instance: WorkflowInstance,
+    steps: WorkflowStep[],
+  ): Promise<void> {
     const readySteps = this.findReadySteps(instance, steps);
     if (readySteps.length > 0) {
       await this.executeSteps(instance, readySteps, steps);
@@ -189,7 +207,10 @@ export class WorkflowExecutionService {
   }
 
   // Update the helper methods as well
-  private findReadySteps(instance: WorkflowInstance, steps: WorkflowStep[]): string[] {
+  private findReadySteps(
+    instance: WorkflowInstance,
+    steps: WorkflowStep[],
+  ): string[] {
     const { stepExecutions } = instance.state;
     const completedStepKeys = new Set(stepExecutions.map((s) => s.stepId));
 
@@ -201,7 +222,9 @@ export class WorkflowExecutionService {
         }
 
         // Check if all dependencies are completed
-        return step.dependencies.every((depKey) => completedStepKeys.has(depKey));
+        return step.dependencies.every((depKey) =>
+          completedStepKeys.has(depKey),
+        );
       })
       .map((step) => step.key);
   }
@@ -251,7 +274,7 @@ export class WorkflowExecutionService {
             case 'script':
               result = await this.executeScriptTask(
                 step.config,
-                instance.state.variables
+                instance.state.variables,
               );
               break;
             case 'http':
@@ -272,7 +295,9 @@ export class WorkflowExecutionService {
 
           // Update variables with step output using output mapping
           if (step.config?.outputMapping) {
-            for (const [key, path] of Object.entries(step.config.outputMapping)) {
+            for (const [key, path] of Object.entries(
+              step.config.outputMapping,
+            )) {
               instance.state.variables[key] = result.output[path];
             }
           }
@@ -300,17 +325,23 @@ export class WorkflowExecutionService {
   }
 
   // Update isWorkflowComplete method as well
-  private isWorkflowComplete(instance: WorkflowInstance, steps: WorkflowStep[]): boolean {
-    const completedSteps = new Set(
-      instance.state.stepExecutions
-        .filter((s) => s.status === StepStatus.COMPLETED)
-        .map((s) => s.stepId)
-    );
-
+  private isWorkflowComplete(
+    instance: WorkflowInstance,
+    steps: WorkflowStep[],
+  ): boolean {
     // All steps should be either completed or in a final state
     return steps.every((step) => {
-      const execution = instance.state.stepExecutions.find((s) => s.stepId === step.key);
-      return execution && [StepStatus.COMPLETED, StepStatus.FAILED, StepStatus.CANCELLED].includes(execution.status);
+      const execution = instance.state.stepExecutions.find(
+        (s) => s.stepId === step.key,
+      );
+      return (
+        execution &&
+        [
+          StepStatus.COMPLETED,
+          StepStatus.FAILED,
+          StepStatus.CANCELLED,
+        ].includes(execution.status)
+      );
     });
   }
 
@@ -369,7 +400,7 @@ export class WorkflowExecutionService {
       return {
         success: true,
         output: {
-          result: scriptResult
+          result: scriptResult,
         },
       };
     } catch (error) {
@@ -449,10 +480,14 @@ export class WorkflowExecutionService {
     }
 
     // Find the step execution
-    const stepExecution = instance.state.stepExecutions.find((s) => s.stepId === stepKey && s.status === StepStatus.PENDING);
+    const stepExecution = instance.state.stepExecutions.find(
+      (s) => s.stepId === stepKey && s.status === StepStatus.PENDING,
+    );
 
     if (!stepExecution) {
-      throw new BadRequestException(`No pending human task found for step ${stepKey}`);
+      throw new BadRequestException(
+        `No pending human task found for step ${stepKey}`,
+      );
     }
 
     // Update step execution
