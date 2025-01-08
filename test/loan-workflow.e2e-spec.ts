@@ -5,8 +5,8 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { CreateWorkflowDefinitionDto } from '../src/workflow/dto/create-workflow-definition.dto';
 import { StartWorkflowDto } from '../src/workflow/dto/start-workflow.dto';
-import { WorkflowStatus } from '../src/workflow/enums/workflow-status.enum';
 import { StepType } from '../src/workflow/enums/step-type.enum';
+import { WorkflowStatus } from '../src/workflow/enums/workflow-status.enum';
 
 describe('Comprehensive Loan Approval Workflow E2E Test', () => {
   let app: INestApplication;
@@ -273,7 +273,6 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
       .send(completeTaskOutput)
       .expect(201);
 
-    console.log('Complete risk assessment response:', response.body);
     expect(response.body.state.stepExecutions).toContainEqual(
       expect.objectContaining({
         stepId: 'risk-assessment',
@@ -296,7 +295,6 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
       .send(completeTaskOutput)
       .expect(201);
 
-    console.log('Complete final approval response:', response.body);
     expect(response.body.status).toBe('COMPLETED');
     expect(response.body.output).toEqual(
       expect.objectContaining({
@@ -307,74 +305,81 @@ describe('Comprehensive Loan Approval Workflow E2E Test', () => {
     );
   });
 
-  // it('should handle loan rejection scenario', async () => {
-  //   const startWorkflowDto: StartWorkflowDto = {
-  //     workflowDefinitionId: workflowId,
-  //     businessId: 'LOAN-2023-002',
-  //     input: {
-  //       applicationId: 'LA-002',
-  //       applicantName: 'Jane Smith',
-  //       loanAmount: 200000,
-  //       creditScore: 550,
-  //       employmentStatus: 'Self-employed',
-  //       annualIncome: 60000,
-  //     },
-  //   };
+  it('should handle loan rejection scenario', async () => {
+    const startWorkflowDto: StartWorkflowDto = {
+      workflowDefinitionId: workflowId,
+      businessId: 'LOAN-2023-002',
+      input: {
+        applicationId: 'LA-002',
+        applicantName: 'Jane Smith',
+        loanAmount: 200000,
+        creditScore: 550,
+        employmentStatus: 'Self-employed',
+        annualIncome: 60000,
+      },
+    };
 
-  //   const startResponse = await request(app.getHttpServer())
-  //     .post('/workflows/start')
-  //     .send(startWorkflowDto)
-  //     .expect(201);
+    const startResponse = await request(app.getHttpServer())
+      .post('/workflows/start')
+      .send(startWorkflowDto)
+      .expect(201);
+    console.log('Start workflow response:', startResponse.body);
 
-  //   const rejectedWorkflowInstanceId = startResponse.body.id;
+    const rejectedWorkflowInstanceId = startResponse.body.id;
 
-  //   // Complete initial review
-  //   await request(app.getHttpServer())
-  //     .post(`/workflows/${rejectedWorkflowInstanceId}/steps/initial-review/complete`)
-  //     .send({
-  //       initialApproval: true,
-  //       comments: 'Proceed with caution due to high loan amount',
-  //     })
-  //     .expect(201);
+    // Complete initial review
+    const initialReviewResponse = await request(app.getHttpServer())
+      .post(`/workflows/${rejectedWorkflowInstanceId}/steps/initial-review/complete`)
+      .send({
+        initialApproval: true,
+        comments: 'Proceed with caution due to high loan amount',
+      })
+      .expect(201);
+    console.log('Initial review response:', initialReviewResponse.body);
 
-  //   // Complete credit check
-  //   await request(app.getHttpServer())
-  //     .post(`/workflows/${rejectedWorkflowInstanceId}/steps/credit-check/complete`)
-  //     .send({
-  //       creditApproval: false,
-  //       suggestedInterestRate: 10.5,
-  //     })
-  //     .expect(201);
+    // Complete credit check    
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Give time for automatic execution
+    console.log('Waiting for credit check to complete...', workflowInstanceId);
+    const creditCheckresponse = await request(app.getHttpServer())
+      .get(`/workflows/instances/${rejectedWorkflowInstanceId}`)
+      .expect(200);
 
-  //   // Complete risk assessment
-  //   await request(app.getHttpServer())
-  //     .post(`/workflows/${rejectedWorkflowInstanceId}/steps/risk-assessment/complete`)
-  //     .send({
-  //       riskLevel: 'High',
-  //       adjustedInterestRate: 11.0,
-  //       recommendedLoanTerm: 180,
-  //     })
-  //     .expect(201);
+    expect(creditCheckresponse.body.state.stepExecutions).toContainEqual(
+      expect.objectContaining({
+        stepId: 'credit-check',
+        status: 'COMPLETED',
+      }),
+    );
 
-  //   // Complete final approval (rejection)
-  //   const rejectResponse = await request(app.getHttpServer())
-  //     .post(`/workflows/${rejectedWorkflowInstanceId}/steps/final-approval/complete`)
-  //     .send({
-  //       approved: false,
-  //       interestRate: null,
-  //       loanTerm: null,
-  //       comments: 'Loan rejected due to poor credit score and high risk',
-  //     })
-  //     .expect(201);
+    // Complete risk assessment
+    const riskAssessmentResponse = await request(app.getHttpServer())
+      .post(`/workflows/${rejectedWorkflowInstanceId}/steps/risk-assessment/complete`)
+      .send({
+        riskLevel: 'High',
+        adjustedInterestRate: 11.0,
+        recommendedLoanTerm: 180,
+      })
+      .expect(201);
+    console.log('Risk assessment response:', riskAssessmentResponse.body);
 
-  //   console.log('Complete rejection response:', rejectResponse.body);
-  //   expect(rejectResponse.body.status).toBe(WorkflowStatus.COMPLETED);
-  //   expect(rejectResponse.body.output).toEqual({
-  //     approved: false,
-  //     interestRate: null,
-  //     loanTerm: null,
-  //     comments: 'Loan rejected due to poor credit score and high risk',
-  //     riskLevel: 'High',
-  //   });
-  // });
+    // Complete final approval (rejection)
+    const rejectResponse = await request(app.getHttpServer())
+      .post(`/workflows/${rejectedWorkflowInstanceId}/steps/final-approval/complete`)
+      .send({
+        approved: false,
+        interestRate: null,
+        loanTerm: null,
+        comments: 'Loan rejected due to poor credit score and high risk',
+      })
+      .expect(201);
+    console.log('Final approval (rejection) response:', rejectResponse.body);
+
+    expect(rejectResponse.body.status).toBe(WorkflowStatus.COMPLETED);
+    expect(rejectResponse.body.output).toEqual({
+      approved: false,
+      interestRate: null,
+      loanTerm: null,
+      comments: 'Loan rejected due to poor credit score and high risk',
+    });
+  });
 });

@@ -71,7 +71,6 @@ describe('Workflow E2E Test', () => {
       .send(createWorkflowDto)
       .expect(201);
 
-    console.log('Create workflow definition response:', response.body);
     workflowId = response.body.id;
     expect(response.body.name).toBe(createWorkflowDto.name);
     expect(response.body.steps).toHaveLength(1);
@@ -93,7 +92,6 @@ describe('Workflow E2E Test', () => {
       .send(startWorkflowDto)
       .expect(201);
 
-    console.log('Start workflow response:', response.body);
     workflowInstanceId = response.body.id;
 
     // Since the start response already contains the instance status, we can use it directly
@@ -111,8 +109,6 @@ describe('Workflow E2E Test', () => {
       .post(`/workflows/${workflowInstanceId}/steps/initial-review/complete`)
       .send(completeTaskOutput)
       .expect(201);
-
-    console.log('Complete task response:', completeResponse.body);
 
     // Since the complete response contains the updated instance, we can use it directly
     expect(completeResponse.body.status).toBe(WorkflowStatus.COMPLETED);
